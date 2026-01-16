@@ -6,13 +6,10 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
-      <Button
-        title="Go to Dashboard"
-        onPress={() => router.push('/dashboard')}
-      />
-      <Button
-        title="Start Lessons"
-        onPress={() => router.push('/lessons/greetings')}
+
+       <Button
+        title="home"
+        onPress={() => router.push('/main/home')}
       />
     </View>
   );
