@@ -1,6 +1,14 @@
-import { View, Text, StyleSheet, Switch, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Switch,
+  Pressable,
+  Alert
+} from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useEffect, useState } from "react";
+import { canDispenseFood } from "../services/FeedGuardService";
 
 type Props = {
   id: string;
@@ -21,13 +29,12 @@ export default function ScheduleItemCard({
   active,
   onSave
 }: Props) {
-  // Local mirror of Firebase state
+  
   const [enabled, setEnabled] = useState(active);
   const [currentTime, setCurrentTime] = useState(time);
   const [currentAngle, setCurrentAngle] = useState(angle);
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  // 🔴 CRITICAL: re-sync when Firebase updates
   useEffect(() => {
     setEnabled(active);
     setCurrentTime(time);
@@ -46,48 +53,106 @@ export default function ScheduleItemCard({
     });
   };
 
-  const handleToggle = (value: boolean) => {
+  /**
+   * Guarded toggle
+   */
+  const handleToggle = async (value: boolean) => {
+    if (value) {
+      const allowed = await canDispenseFood();
+
+      if (!allowed) {
+        Alert.alert(
+          "Feeding Blocked",
+          "Cannot activate this schedule while food is still in the bowl."
+        );
+        return;
+      }
+    }
+
     setEnabled(value);
     save({ active: value });
   };
 
-  const handleTimeChange = (_: any, date?: Date) => {
+  const handleTimeChange = async (_: any, date?: Date) => {
     setPickerOpen(false);
     if (!date) return;
 
-    const hh = date.getHours().toString().padStart(2, "0");
-    const mm = date.getMinutes().toString().padStart(2, "0");
+    if (enabled) {
+      const allowed = await canDispenseFood();
+      if (!allowed) {
+        Alert.alert(
+          "Update Blocked",
+          "Disable the schedule before changing the time."
+        );
+        return;
+      }
+    }
+
+    const hh = date
+      .getHours()
+      .toString()
+      .padStart(2, "0");
+    const mm = date
+      .getMinutes()
+      .toString()
+      .padStart(2, "0");
+
     const formatted = `${hh}:${mm}`;
 
     setCurrentTime(formatted);
     save({ time: formatted });
   };
 
-  const handlePortion = (value: number) => {
+  const handlePortion = async (value: number) => {
+    if (enabled) {
+      const allowed = await canDispenseFood();
+
+      if (!allowed) {
+        Alert.alert(
+          "Update Blocked",
+          "Disable the schedule before changing the portion."
+        );
+        return;
+      }
+    }
+
     setCurrentAngle(value);
     save({ angle: value });
   };
 
   return (
     <View style={styles.card}>
+      {/* HEADER */}
       <View style={styles.row}>
-        <Text style={styles.title}>{id.toUpperCase()}</Text>
-        <Switch value={enabled} onValueChange={handleToggle} />
+        <Text style={styles.title}>
+          {id.toUpperCase()}
+        </Text>
+
+        <Switch
+          value={enabled}
+          onValueChange={handleToggle}
+        />
       </View>
 
+      {/* TIME */}
       <Pressable onPress={() => setPickerOpen(true)}>
-        <Text style={styles.time}>Time: {currentTime}</Text>
+        <Text style={styles.time}>
+          Time: {currentTime}
+        </Text>
       </Pressable>
 
+      {/* PORTION */}
       <View style={styles.portions}>
         <Pressable onPress={() => handlePortion(45)}>
           <Text style={styles.btn}>Small</Text>
         </Pressable>
+
         <Pressable onPress={() => handlePortion(90)}>
           <Text style={styles.btn}>Large</Text>
         </Pressable>
       </View>
 
+      {/* TIME PICKER */}
       {pickerOpen && (
         <DateTimePicker
           mode="time"
@@ -113,9 +178,18 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 10
   },
-  title: { fontSize: 16, fontWeight: "bold" },
-  time: { fontSize: 16, marginBottom: 10 },
-  portions: { flexDirection: "row", gap: 10 },
+  title: {
+    fontSize: 16,
+    fontWeight: "bold"
+  },
+  time: {
+    fontSize: 16,
+    marginBottom: 10
+  },
+  portions: {
+    flexDirection: "row",
+    gap: 10
+  },
   btn: {
     paddingVertical: 6,
     paddingHorizontal: 12,

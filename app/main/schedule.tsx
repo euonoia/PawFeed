@@ -1,12 +1,53 @@
-import { View, Text, StyleSheet, Switch } from "react-native";
+import { View, Text, StyleSheet, Switch, Alert } from "react-native";
 import { useTheme } from "../../theme/useTheme";
 import { useSchedule } from "../../hooks/useSchedule";
 import ScheduleItemCard from "../../components/ScheduleItemcard";
+import { canDispenseFood } from "../../services/FeedGuardService";
 
 export default function ScheduleScreen() {
   const theme = useTheme();
   const { enabled, items, toggleSchedule, saveItem } =
     useSchedule();
+
+  const handleToggleSchedule = async () => {
+  if (!enabled) {
+    const allowed = await canDispenseFood();
+
+    if (!allowed) {
+      Alert.alert(
+        "Feeding Blocked",
+        "Cannot enable automatic feeding while food is still in the bowl."
+      );
+      return;
+    }
+  }
+
+  toggleSchedule(!enabled);
+};
+
+
+  const handleSaveItem = async (
+    id: string,
+    item: any,
+    updated: any
+  ) => {
+    if (updated.active) {
+      const allowed = await canDispenseFood();
+
+      if (!allowed) {
+        Alert.alert(
+          "Feeding Blocked",
+          "Cannot activate this schedule while food is still in the bowl."
+        );
+        return;
+      }
+    }
+
+    saveItem(id, {
+      ...item,
+      ...updated,
+    });
+  };
 
   return (
     <View
@@ -37,7 +78,7 @@ export default function ScheduleScreen() {
 
         <Switch
           value={enabled}
-          onValueChange={toggleSchedule}
+          onValueChange={handleToggleSchedule}
           trackColor={{
             false: theme.muted,
             true: theme.secondary,
@@ -62,10 +103,7 @@ export default function ScheduleScreen() {
             angle={item.angle}
             active={item.active}
             onSave={(updated) =>
-              saveItem(id, {
-                ...item,
-                ...updated,
-              })
+              handleSaveItem(id, item, updated)
             }
           />
         );

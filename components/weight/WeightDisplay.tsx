@@ -11,7 +11,7 @@ export default function WeightDisplay() {
     const interval = setInterval(async () => {
       const w = await getCurrentWeight();
       setWeight(w);
-    }, 3000); // update every 3 seconds
+    }, 3000); 
 
     return () => clearInterval(interval);
   }, []);
