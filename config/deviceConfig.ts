@@ -6,4 +6,7 @@ export const DEVICE_CONFIG = {
     SMALL: 0,
     LARGE: 90,
   },
+  PATHS: {
+    WEIGHT: (deviceId: string) => `/devices/${deviceId}/weight`, 
+  },
 };

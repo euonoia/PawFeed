@@ -13,6 +13,7 @@ import { DEVICE_CONFIG } from "../../config/deviceConfig";
 
 import ConnectionBadge from "../../components/connections/ConnnectionBadge";
 import FeedButton from "../../components/FeedButton";
+import WeightDisplay from "../../components/weight/WeightDisplay"; 
 
 export default function Home() {
   const theme = useTheme();
@@ -58,6 +59,9 @@ export default function Home() {
           online={isOnline}
           lastSeen={status?.lastSeen}
         />
+
+        {/* WEIGHT */}
+        <WeightDisplay />
 
         {/* CONTROLS */}
         <View style={styles.controlsContainer}>
@@ -105,7 +109,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: "700",
-    marginBottom: 30,
+    marginBottom: 20,
     marginTop: 10,
   },
   controlsContainer: {
