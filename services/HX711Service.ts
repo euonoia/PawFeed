@@ -1,5 +1,5 @@
 import { ref, onValue } from "firebase/database";
-import { rtdb } from "../config/firebase"; // use your RTDB instance
+import { rtdb } from "../config/firebase"; 
 import { DEVICE_CONFIG } from "../config/deviceConfig";
 
 /**
@@ -12,8 +12,8 @@ export function subscribeWeight(callback: (weight: number) => void) {
 
   const unsubscribe = onValue(weightRef, (snapshot) => {
     const value = snapshot.val();
-    callback(value ?? 0); // default to 0 if null
+    callback(value ?? 0); 
   });
 
-  return unsubscribe; // call this to stop listening
+  return unsubscribe; 
 }

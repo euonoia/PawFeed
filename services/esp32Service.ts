@@ -1,18 +1,27 @@
-import { getDatabase, ref, set } from "firebase/database";
-import { firebaseApp } from "../config/firebase";
+import { ref, set } from "firebase/database";
+import { rtdb } from "../config/firebase";
+import { DEVICE_CONFIG } from "../config/deviceConfig";
+import { getCurrentWeight } from "./WeightService";
 
-const db = getDatabase(firebaseApp);
-const DEVICE_ID = "feeder_001";
+const DEVICE_ID = DEVICE_CONFIG.ID;
 
 export const moveServo = async (angle: number) => {
   if (angle < 0 || angle > 180) return;
 
-  await set(
-    ref(db, `/devices/${DEVICE_ID}/servo`),
-    {
-      targetAngle: angle,
-      status: "moving",
-      updatedAt: Date.now()
-    }
-  );
+  await set(ref(rtdb, `devices/${DEVICE_ID}/servo`), {
+    targetAngle: angle,
+    status: "moving",
+    updatedAt: Date.now(),
+  });
+};
+
+export const feedIfEmpty = async (angle: number) => {
+  const weight = await getCurrentWeight();
+  console.log("Current weight:", weight, "g");
+
+  if (weight > 0) {
+    throw new Error(`Cannot feed: current weight is ${weight}g`);
+  }
+
+  await moveServo(angle);
 };

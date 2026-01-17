@@ -1,19 +1,14 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Alert,
-} from "react-native";
+import { View, Text, StyleSheet, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../theme/useTheme";
 import { useDeviceStatus } from "../../hooks/useDeviceStatus";
-import { moveServo } from "../../services/esp32Service";
+import { feedIfEmpty } from "../../services/esp32Service";
 import { DEVICE_CONFIG } from "../../config/deviceConfig";
 
 import ConnectionBadge from "../../components/connections/ConnnectionBadge";
 import FeedButton from "../../components/FeedButton";
-import WeightDisplay from "../../components/weight/WeightDisplay"; 
+import WeightDisplay from "../../components/weight/WeightDisplay";
 
 export default function Home() {
   const theme = useTheme();
@@ -28,10 +23,10 @@ export default function Home() {
 
     setLoading(true);
     try {
-      await moveServo(angle);
+      await feedIfEmpty(angle);
       Alert.alert("Success", "Yummy! Food dispensed.");
-    } catch {
-      Alert.alert("Error", "Failed to dispense food.");
+    } catch (err: any) {
+      Alert.alert("Cannot Feed", err.message || "Failed to dispense food.");
     } finally {
       setLoading(false);
     }
@@ -98,28 +93,9 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-    padding: 20,
-    alignItems: "center",
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: "700",
-    marginBottom: 20,
-    marginTop: 10,
-  },
-  controlsContainer: {
-    width: "100%",
-    alignItems: "center",
-    marginTop: 40,
-  },
-  sectionLabel: {
-    fontSize: 16,
-    marginBottom: 15,
-    fontWeight: "500",
-  },
+  safeArea: { flex: 1 },
+  container: { flex: 1, padding: 20, alignItems: "center" },
+  headerTitle: { fontSize: 28, fontWeight: "700", marginBottom: 20, marginTop: 10 },
+  controlsContainer: { width: "100%", alignItems: "center", marginTop: 40 },
+  sectionLabel: { fontSize: 16, marginBottom: 15, fontWeight: "500" },
 });
