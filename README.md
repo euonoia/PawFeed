@@ -1,4 +1,4 @@
-# PawFeed: Mission-Critical IoT Pet Nutrition System
+# PawFeed
 
 PawFeed is a full-stack IoT ecosystem designed to automate and monitor pet nutrition with high precision. It integrates an **ESP32-based hardware controller** with a **React Native (Expo)** mobile application via **Firebase Realtime Database**.
 
