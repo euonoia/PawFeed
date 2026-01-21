@@ -1,10 +1,18 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } from "react-native";
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TouchableOpacity, 
+  SafeAreaView, 
+  Dimensions, 
+  Image 
+} from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { useTheme } from "@/theme/useTheme"; // Adjust this path to your actual file
+import { useTheme } from "@/theme/useTheme"; 
 
-const { height } = Dimensions.get("window");
+const { height, width } = Dimensions.get("window");
+const isSmallScreen = height < 700;
 
 export default function Onboarding() {
   const router = useRouter();
@@ -16,45 +24,65 @@ export default function Onboarding() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.surface }]}>
-      {/* Background Gray Section with Diagonal Cut */}
-      <View style={[styles.grayBackground, { backgroundColor: theme.background }]} />
+      {/* Background Section with Modern Diagonal Cut */}
+      <View style={[styles.diagonalBackground, { backgroundColor: theme.background }]} />
 
       <SafeAreaView style={styles.safeArea}>
+        {/* Header Section: Title & Logo */}
         <View style={styles.header}>
-          {/* Top Left Text */}
           <View style={styles.titleContainer}>
             <Text style={[styles.title, { color: theme.text }]}>
               Welcome to{"\n"}PawFeed
             </Text>
+            <View style={[styles.badge, { backgroundColor: theme.primary + '20' }]}>
+              <Text style={[styles.badgeText, { color: theme.primary }]}>
+                Smart Pet Care
+              </Text>
+            </View>
           </View>
 
-          {/* Logo Section (Right Side) */}
+          {/* Logo Container with High Visibility */}
           <View style={styles.logoContainer}>
-            <View style={[styles.iconCircle, { backgroundColor: theme.surface }]}>
-              <Ionicons name="paw" size={60} color={theme.primary} />
+            <View style={[
+              styles.iconCircle, 
+              { 
+                backgroundColor: "#FFFFFF", 
+                borderColor: theme.primary + '30',
+                shadowColor: "#000" 
+              }
+            ]}>
+              <Image
+                source={require("../assets/pawfeed.png")}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </View>
           </View>
         </View>
 
-        {/* Content Area */}
+        {/* Middle Content: Value Proposition */}
         <View style={styles.content}>
-          <Text style={[styles.subtitle, { color: theme.muted }]}>
-            Let’s get your device connected so your furry friends never miss a meal.
+          <Text style={[styles.subtitle, { color: theme.text }]}>
+            Ensuring your furry friends never miss a meal.
+          </Text>
+          <Text style={[styles.description, { color: theme.muted }]}>
+            follow the setup guide to connect your PawFeed device and start managing your pet's feeding schedule with ease and convenience.
           </Text>
         </View>
 
-        {/* Footer Button */}
+        {/* Footer: Primary Actions */}
         <View style={styles.footer}>
           <TouchableOpacity 
-            style={[styles.button, { backgroundColor:theme.primary, shadowColor: theme.primary }]} 
+            style={[styles.button, { backgroundColor: theme.primary, shadowColor: theme.primary }]} 
             activeOpacity={0.8}
             onPress={handleGetStarted}
           >
             <Text style={styles.buttonText}>Get Started</Text>
           </TouchableOpacity>
-          <TouchableOpacity>
+          
+          <TouchableOpacity style={styles.supportButton}>
             <Text style={[styles.helpText, { color: theme.muted }]}>
-              Need help? Visit support
+              Need help? Visit support center
             </Text>
           </TouchableOpacity>
         </View>
@@ -67,9 +95,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  grayBackground: {
+  diagonalBackground: {
     position: "absolute",
-    top: -50,
+    top: -height * 0.1,
     left: 0,
     right: 0,
     height: height * 0.45,
@@ -83,63 +111,96 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-start",
     paddingHorizontal: 30,
-    paddingTop: 60,
-    height: height * 0.35,
+    paddingTop: isSmallScreen ? 30 : 50,
+    height: height * 0.32,
   },
   titleContainer: {
     flex: 1,
+    paddingTop: 10,
   },
   title: {
-    fontSize: 42,
-    fontWeight: "800",
-    fontFamily: "System", 
-    lineHeight: 48,
+    fontSize: isSmallScreen ? 34 : 42,
+    fontWeight: "900",
+    letterSpacing: -1,
+    lineHeight: isSmallScreen ? 38 : 46,
+  },
+  badge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
+    marginTop: 12,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
   },
   logoContainer: {
     justifyContent: "center",
     alignItems: "center",
   },
   iconCircle: {
-    padding: 20,
-    borderRadius: 50,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    width: isSmallScreen ? 90 : 110,
+    height: isSmallScreen ? 90 : 110,
+    borderRadius: 60,
+    borderWidth: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  logoImage: {
+    width: '75%',
+    height: '75%',
   },
   content: {
     flex: 1,
-    paddingHorizontal: 40,
+    paddingHorizontal: 35,
     justifyContent: "center",
+    marginTop: -20,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 22,
+    fontWeight: '700',
     textAlign: "center",
-    lineHeight: 26,
-    fontFamily: "System",
+    marginBottom: 15,
+    lineHeight: 28,
+  },
+  description: {
+    fontSize: 16,
+    textAlign: "center",
+    lineHeight: 24,
+    paddingHorizontal: 10,
   },
   footer: {
     paddingHorizontal: 30,
-    paddingBottom: 50,
+    paddingBottom: isSmallScreen ? 30 : 50,
   },
   button: {
     paddingVertical: 18,
-    borderRadius: 20,
+    borderRadius: 18,
     alignItems: "center",
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
+    shadowOpacity: 0.25,
+    shadowRadius: 15,
     elevation: 8,
   },
   buttonText: {
-    color: "#FFFFFF", // Keep white for contrast on primary button
-    fontSize: 20,
-    fontWeight: "700",
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  supportButton: {
+    marginTop: 20,
+    paddingVertical: 10,
   },
   helpText: {
-    marginTop: 20,
     textAlign: "center",
-    fontSize: 15,
+    fontSize: 14,
+    fontWeight: '600',
     textDecorationLine: "underline",
   },
 });
