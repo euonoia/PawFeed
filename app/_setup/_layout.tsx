@@ -1,28 +1,54 @@
-import { View, ScrollView, StyleSheet, Text } from "react-native";
+import { View, StyleSheet, Text } from "react-native";
 import { Slot } from "expo-router";
+import { useTheme } from "@/theme/useTheme";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar"; // Import this
 
 export default function SetupLayout() {
+  const theme = useTheme();
+
+  // Determine if we are in dark mode to set the status bar style correctly
+  // If your useTheme hook has a 'dark' boolean, use that. 
+  // Otherwise, we can check a color (like background) to guess.
+  const isDark = theme.background === "#0F172A"; 
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>PawFeed Setup</Text>
-      </View>
-      <ScrollView contentContainerStyle={styles.content}>
+    <View style={[styles.container, { backgroundColor: theme.surface }]}>
+      {/* 🟢 This controls the Status Bar (Top) and Navigation Bar (Bottom) */}
+      <StatusBar style={isDark ? "light" : "dark"} />
+
+      {/* Modern Minimal Header */}
+      <SafeAreaView edges={['top']} style={[styles.header, { borderBottomColor: theme.background + '40' }]}>
+        <Text style={[styles.headerText, { color: theme.text }]}>
+          PawFeed Setup
+        </Text>
+      </SafeAreaView>
+
+      <View style={styles.content}>
         <Slot />
-      </ScrollView>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: { 
+    flex: 1, 
+  },
   header: {
     height: 60,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#4CAF50",
-    paddingTop: 15,
+    borderBottomWidth: 1, 
+    backgroundColor: "transparent",
   },
-  headerText: { color: "#fff", fontSize: 20, fontWeight: "700" },
-  content: { padding: 24 },
+  headerText: { 
+    fontSize: 18, 
+    fontWeight: "800",
+    letterSpacing: -0.5,
+    fontFamily: "System",
+  },
+  content: { 
+    flex: 1, 
+  },
 });
