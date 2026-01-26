@@ -12,6 +12,7 @@ export const DEVICE_CONFIG = {
     OWNER: (deviceId: string) => `devices/${deviceId}/owner`,
     CONNECTIVITY: (deviceId: string) => `devices/${deviceId}/connectivity`,
     SERVO_TARGET: (deviceId: string) => `devices/${deviceId}/servo/targetAngle`,
+    SERVO_APPLIED: (deviceId: string) => `devices/${deviceId}/servo/appliedAngle`,
     WEIGHT: (deviceId: string) => `devices/${deviceId}/weight`,
     SCHEDULE: (deviceId: string) => `devices/${deviceId}/schedule`,
   },
