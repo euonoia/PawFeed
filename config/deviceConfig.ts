@@ -9,8 +9,7 @@ export const DEVICE_CONFIG = {
     EMPTY_THRESHOLD: 0.1,
   },
   PATHS: {
-    OWNER: (deviceId: string) => `devices/${deviceId}/owner`,
-    CONNECTIVITY: (deviceId: string) => `devices/${deviceId}/connectivity`,
+    OWNER: (deviceId: string) => `devices/${deviceId}/owner`, 
     SERVO_TARGET: (deviceId: string) => `devices/${deviceId}/servo/targetAngle`,
     SERVO_APPLIED: (deviceId: string) => `devices/${deviceId}/servo/appliedAngle`,
     WEIGHT: (deviceId: string) => `devices/${deviceId}/weight`,
