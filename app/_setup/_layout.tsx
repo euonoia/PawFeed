@@ -2,14 +2,10 @@ import { View, StyleSheet, Text } from "react-native";
 import { Slot } from "expo-router";
 import { useTheme } from "@/theme/useTheme";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar"; // Import this
-
+import { StatusBar } from "expo-status-bar"; 
 export default function SetupLayout() {
   const theme = useTheme();
 
-  // Determine if we are in dark mode to set the status bar style correctly
-  // If your useTheme hook has a 'dark' boolean, use that. 
-  // Otherwise, we can check a color (like background) to guess.
   const isDark = theme.background === "#0F172A"; 
 
   return (
