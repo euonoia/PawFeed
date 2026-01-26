@@ -1,23 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { getDatabase, ref, onValue, set, update } from "firebase/database";
 import { firebaseApp } from "../config/firebase";
 import { DEVICE_CONFIG } from "../config/deviceConfig";
 
 const db = getDatabase(firebaseApp);
 const BASE = `/devices/${DEVICE_CONFIG.ID}/schedule`;
+const SERVO_PATH = `/devices/${DEVICE_CONFIG.ID}/servo/targetAngle`;
 
 export type ScheduleItem = {
-  time: string;    
-  angle: number;    
+  time: string;
+  angle: number;
   active: boolean;
-  lastRun?: string;  
+  lastRun?: string;
 };
 
 export function useSchedule() {
   const [enabled, setEnabled] = useState(false);
   const [items, setItems] = useState<Record<string, ScheduleItem>>({});
+  const feedingLock = useRef(false);
 
-  // Listen to schedule changes in real-time
+  /* ===============================
+     REALTIME LISTENER
+  =============================== */
   useEffect(() => {
     const unsub = onValue(ref(db, BASE), snap => {
       if (!snap.exists()) return;
@@ -30,13 +34,22 @@ export function useSchedule() {
     return () => unsub();
   }, []);
 
-  // Function to check and trigger feeds automatically
+  /* ===============================
+     SCHEDULE EXECUTION
+  =============================== */
   useEffect(() => {
     if (!enabled) return;
 
     const interval = setInterval(async () => {
+      if (feedingLock.current) return;
+
       const now = new Date();
-      const currentTime = `${now.getHours()}`.padStart(2, "0") + ":" + `${now.getMinutes()}`.padStart(2, "0");
+      const currentTime =
+        `${now.getHours()}`.padStart(2, "0") +
+        ":" +
+        `${now.getMinutes()}`.padStart(2, "0");
+
+      const nowSec = Math.floor(Date.now() / 1000);
 
       for (const [id, item] of Object.entries(items)) {
         if (!item.active) continue;
@@ -44,22 +57,40 @@ export function useSchedule() {
 
         const lastRun = item.lastRun ? parseInt(item.lastRun, 10) : 0;
 
-        // Prevent multiple triggers within the same minute
-        if (lastRun >= Math.floor(Date.now() / 1000 / 60) * 60) continue;
+        // Prevent multiple runs in the same minute
+        if (nowSec - lastRun < 60) continue;
 
-        // Trigger the feed by updating targetAngle
-        const targetRef = ref(db, `/devices/${DEVICE_CONFIG.ID}/servo/targetAngle`);
-        await set(targetRef, item.angle);
+        feedingLock.current = true;
 
-        // Update lastRun to current timestamp
-        const lastRunRef = ref(db, `${BASE}/items/${id}/lastRun`);
-        await set(lastRunRef, Math.floor(Date.now() / 1000).toString());
+        try {
+          // 1️⃣ Move servo to feeding angle
+          await set(ref(db, SERVO_PATH), item.angle);
+
+          // 2️⃣ Wait for dispense duration
+          await new Promise(resolve => setTimeout(resolve, 1500));
+
+          // 3️⃣ Return servo to 0°
+          await set(ref(db, SERVO_PATH), DEVICE_CONFIG.PORTIONS.SMALL);
+
+          // 4️⃣ Save lastRun
+          await set(
+            ref(db, `${BASE}/items/${id}/lastRun`),
+            nowSec.toString()
+          );
+        } catch (err) {
+          console.error("Schedule execution failed:", err);
+        } finally {
+          feedingLock.current = false;
+        }
       }
-    }, 5000); // Check every 5 seconds
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [items, enabled]);
 
+  /* ===============================
+     API
+  =============================== */
   const toggleSchedule = async (value: boolean) => {
     await update(ref(db, BASE), { enabled: value });
     setEnabled(value);
@@ -70,5 +101,10 @@ export function useSchedule() {
     setItems(prev => ({ ...prev, [id]: item }));
   };
 
-  return { enabled, items, toggleSchedule, saveItem };
+  return {
+    enabled,
+    items,
+    toggleSchedule,
+    saveItem,
+  };
 }
