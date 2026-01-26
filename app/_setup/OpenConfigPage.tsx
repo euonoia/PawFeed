@@ -59,7 +59,7 @@ export default function OpenConfigPage() {
       <View style={styles.footer}>
         <TouchableOpacity 
           style={[styles.button, { backgroundColor: theme.primary }]} 
-          onPress={() => router.push("/_setup/EnterWifi")}
+          onPress={() => router.push("/_setup/claimDevice")}
         >
           <Text style={styles.buttonText}>I've Finished Setup</Text>
         </TouchableOpacity>

@@ -10,7 +10,7 @@ export default function SetupLayout() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.surface }]}>
-      {/* 🟢 This controls the Status Bar (Top) and Navigation Bar (Bottom) */}
+      
       <StatusBar style={isDark ? "light" : "dark"} />
 
       {/* Modern Minimal Header */}

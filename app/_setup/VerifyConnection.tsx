@@ -1,8 +1,9 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert, Dimensions } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/theme/useTheme";
+import { useClaimDevice } from "@/hooks/useClaimDevice";
 
 const { height } = Dimensions.get("window");
 const isSmallScreen = height < 700;
@@ -10,6 +11,26 @@ const isSmallScreen = height < 700;
 export default function VerifyConnection() {
   const router = useRouter();
   const theme = useTheme();
+  const { claimDevice, loading, error } = useClaimDevice();
+
+  // Replace with the actual device ID obtained from your setup process
+  const deviceId = "PAWFEED_XXXX";
+
+  const handleFinishSetup = async () => {
+    try {
+      const success = await claimDevice(deviceId);
+
+      if (success) {
+        Alert.alert("Success", "Device claimed successfully!");
+        router.replace("/main/home");
+      } else {
+        Alert.alert("Already Claimed", "This device is already owned by another user.");
+        router.replace("/main/home");
+      }
+    } catch (err: any) {
+      Alert.alert("Error", err.message);
+    }
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.surface }]}>
@@ -61,12 +82,14 @@ export default function VerifyConnection() {
 
           <TouchableOpacity 
             style={[styles.button, { backgroundColor: theme.primary }]} 
-            onPress={() => router.replace("/main/home")}
-            activeOpacity={0.8}
+            onPress={handleFinishSetup}
+            disabled={loading}
           >
-            <Text style={styles.buttonText}>Finish Setup</Text>
+            <Text style={styles.buttonText}>{loading ? "Claiming..." : "Finish Setup"}</Text>
             <Ionicons name="arrow-forward" size={20} color="#FFF" style={{ marginLeft: 8 }} />
           </TouchableOpacity>
+
+          {error && <Text style={{ color: "red", textAlign: "center", marginTop: 8 }}>{error}</Text>}
         </View>
       </View>
     </SafeAreaView>
@@ -74,92 +97,21 @@ export default function VerifyConnection() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  progressContainer: {
-    height: 4,
-    width: "100%",
-    backgroundColor: "#E0E0E0",
-    marginTop: 8,
-  },
-  progressBar: {
-    height: "100%",
-  },
-  mainWrapper: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingVertical: isSmallScreen ? 10 : 30,
-    justifyContent: 'space-between',
-  },
-  headerSection: {
-    marginBottom: isSmallScreen ? 10 : 20,
-  },
-  stepText: {
-    fontSize: 13,
-    fontWeight: "700",
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: isSmallScreen ? 28 : 32,
-    fontWeight: "800",
-  },
-  centerSection: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  successCircle: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: isSmallScreen ? 15 : 25,
-  },
-  textContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  headline: {
-    fontSize: isSmallScreen ? 20 : 24,
-    fontWeight: '700',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  description: {
-    fontSize: 15,
-    lineHeight: 22,
-    textAlign: 'center',
-    paddingHorizontal: 20,
-  },
-  bottomSection: {
-    gap: 16,
-    marginBottom: isSmallScreen ? 10 : 20,
-  },
-  tipCard: {
-    flexDirection: 'row',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    gap: 12,
-  },
-  tipText: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  button: {
-    flexDirection: 'row',
-    paddingVertical: isSmallScreen ? 14 : 18,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: 'center',
-  },
-  buttonText: {
-    color: "#FFF",
-    fontSize: 17,
-    fontWeight: "700",
-  },
+  container: { flex: 1 },
+  progressContainer: { height: 4, width: "100%", backgroundColor: "#E0E0E0", marginTop: 8 },
+  progressBar: { height: "100%" },
+  mainWrapper: { flex: 1, paddingHorizontal: 24, paddingVertical: isSmallScreen ? 10 : 30, justifyContent: 'space-between' },
+  headerSection: { marginBottom: isSmallScreen ? 10 : 20 },
+  stepText: { fontSize: 13, fontWeight: "700", letterSpacing: 1, marginBottom: 4 },
+  title: { fontSize: isSmallScreen ? 28 : 32, fontWeight: "800" },
+  centerSection: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  successCircle: { width: 160, height: 160, borderRadius: 80, justifyContent: 'center', alignItems: 'center', marginBottom: isSmallScreen ? 15 : 25 },
+  textContainer: { alignItems: 'center', marginBottom: 20 },
+  headline: { fontSize: isSmallScreen ? 20 : 24, fontWeight: '700', marginBottom: 8, textAlign: 'center' },
+  description: { fontSize: 15, lineHeight: 22, textAlign: 'center', paddingHorizontal: 20 },
+  bottomSection: { gap: 16, marginBottom: isSmallScreen ? 10 : 20 },
+  tipCard: { flexDirection: 'row', padding: 16, borderRadius: 12, alignItems: 'center', gap: 12 },
+  tipText: { flex: 1, fontSize: 13, lineHeight: 18 },
+  button: { flexDirection: 'row', paddingVertical: isSmallScreen ? 14 : 18, borderRadius: 14, alignItems: "center", justifyContent: 'center' },
+  buttonText: { color: "#FFF", fontSize: 17, fontWeight: "700" },
 });

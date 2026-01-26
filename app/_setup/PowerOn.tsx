@@ -32,7 +32,7 @@ export default function PowerOn() {
         {/* Instructions */}
         <View style={styles.instructionBox}>
           <Text style={[styles.text, { color: theme.text }]}>
-            Plug in your PawFeed device. Look for a blinking light to confirm it's ready.
+            Plug in your PawFeed device. Look for a red light to confirm it's ready.
           </Text>
           
           <View style={[styles.wifiCard, { backgroundColor: theme.background }]}>
