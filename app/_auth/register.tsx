@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/config/firebase";
@@ -36,14 +37,32 @@ export default function Register() {
 
     try {
       setLoading(true);
+
+      // Create Firebase user
       await createUserWithEmailAndPassword(auth, email.trim(), password);
-      router.replace("/_setup/PowerOn"); // user is now authenticated
+
+      // Save flag in AsyncStorage to mark as registered
+      await AsyncStorage.setItem("hasRegistered", "true");
+
+      // Navigate to PowerOn setup step
+      router.replace("/_setup/PowerOn");
     } catch (error: any) {
       Alert.alert("Registration Failed", error.message);
     } finally {
       setLoading(false);
     }
   };
+
+  // Optional: check AsyncStorage if user already registered (redirect to login)
+  React.useEffect(() => {
+    const checkRegistration = async () => {
+      const hasRegistered = await AsyncStorage.getItem("hasRegistered");
+      if (hasRegistered === "true") {
+        router.replace("/_auth/login");
+      }
+    };
+    checkRegistration();
+  }, []);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.surface }]}>
@@ -116,43 +135,12 @@ export default function Register() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    padding: 30,
-    justifyContent: "center",
-    gap: 16,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "800",
-  },
-  subtitle: {
-    fontSize: 16,
-    marginBottom: 20,
-  },
-  input: {
-    padding: 16,
-    borderRadius: 14,
-    fontSize: 16,
-  },
-  button: {
-    paddingVertical: 18,
-    borderRadius: 16,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  buttonText: {
-    color: "#FFF",
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  link: {
-    textAlign: "center",
-    marginTop: 20,
-    fontSize: 16,
-    fontWeight: "600",
-  },
+  container: { flex: 1 },
+  content: { flex: 1, padding: 30, justifyContent: "center", gap: 16 },
+  title: { fontSize: 32, fontWeight: "800" },
+  subtitle: { fontSize: 16, marginBottom: 20 },
+  input: { padding: 16, borderRadius: 14, fontSize: 16 },
+  button: { paddingVertical: 18, borderRadius: 16, alignItems: "center", marginTop: 10 },
+  buttonText: { color: "#FFF", fontSize: 18, fontWeight: "700" },
+  link: { textAlign: "center", marginTop: 20, fontSize: 16, fontWeight: "600" },
 });

@@ -47,7 +47,7 @@ export default function Login() {
         </Text>
 
         <Text style={[styles.subtitle, { color: theme.muted }]}>
-          Sign in to continue setting up your PawFeed device
+          Sign in to continue using your PawFeed 
         </Text>
 
         <TextInput
