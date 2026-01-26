@@ -1,12 +1,18 @@
 export const DEVICE_CONFIG = {
   ID: "feeder_001",
   OFFLINE_THRESHOLD_SEC: 20,
-  // Map angles to friendly names
   PORTIONS: {
     SMALL: 0,
     LARGE: 90,
   },
- WEIGHT: {
-    EMPTY_THRESHOLD: 0.10, // grams
+  WEIGHT: {
+    EMPTY_THRESHOLD: 0.1,
+  },
+  PATHS: {
+    OWNER: (deviceId: string) => `devices/${deviceId}/owner`,
+    CONNECTIVITY: (deviceId: string) => `devices/${deviceId}/connectivity`,
+    SERVO_TARGET: (deviceId: string) => `devices/${deviceId}/servo/targetAngle`,
+    WEIGHT: (deviceId: string) => `devices/${deviceId}/weight`,
+    SCHEDULE: (deviceId: string) => `devices/${deviceId}/schedule`,
   },
 };

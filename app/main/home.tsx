@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../theme/useTheme";
 import { useDeviceStatus } from "../../hooks/useDeviceStatus";
 import { feedIfEmpty } from "../../services/esp32Service";
 import { DEVICE_CONFIG } from "../../config/deviceConfig";
+import { auth, rtdb } from "@/config/firebase";
+import { ref, get } from "firebase/database";
 
 import ConnectionBadge from "../../components/connections/ConnnectionBadge";
 import FeedButton from "../../components/FeedButton";
@@ -14,77 +16,63 @@ export default function Home() {
   const theme = useTheme();
   const { status, isOnline } = useDeviceStatus();
   const [loading, setLoading] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+
+  // Check owner on mount
+  useEffect(() => {
+    const checkOwner = async () => {
+      const user = auth.currentUser;
+      if (!user) return setIsOwner(false);
+
+      try {
+        const snapshot = await get(ref(rtdb, DEVICE_CONFIG.PATHS.OWNER(DEVICE_CONFIG.ID)));
+        setIsOwner(snapshot.exists() && snapshot.val() === user.uid);
+      } catch (err) {
+        console.error("Failed to check ownership:", err);
+        setIsOwner(false);
+      }
+    };
+    checkOwner();
+  }, []);
 
   const handleFeed = async (angle: number) => {
-    if (!isOnline) {
-      Alert.alert("Offline", "Cannot feed while device is offline.");
-      return;
-    }
+    if (!isOnline) return Alert.alert("Offline", "Device is offline.");
+    if (!isOwner) return Alert.alert("Not Authorized", "You are not the owner.");
 
     setLoading(true);
     try {
       await feedIfEmpty(angle);
-      Alert.alert("Success", "Yummy! Food dispensed.");
-    } catch (err: any) {
-      Alert.alert("Cannot Feed", err.message || "Failed to dispense food.");
+      Alert.alert("Success", "Food dispensed!");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to feed";
+      Alert.alert("Error", message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView
-      style={[
-        styles.safeArea,
-        { backgroundColor: theme.background },
-      ]}
-    >
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <View style={styles.container}>
-        <Text
-          style={[
-            styles.headerTitle,
-            { color: theme.text },
-          ]}
-        >
-          Pet Feeder 3000
-        </Text>
+        <Text style={[styles.headerTitle, { color: theme.text }]}>Pet Feeder 3000</Text>
 
-        {/* STATUS */}
-        <ConnectionBadge
-          online={isOnline}
-          lastSeen={status?.lastSeen}
-        />
-
-        {/* WEIGHT */}
+        <ConnectionBadge online={isOnline} lastSeen={status?.lastSeen} />
         <WeightDisplay />
 
-        {/* CONTROLS */}
         <View style={styles.controlsContainer}>
-          <Text
-            style={[
-              styles.sectionLabel,
-              { color: theme.muted },
-            ]}
-          >
-            Select Portion
-          </Text>
+          <Text style={[styles.sectionLabel, { color: theme.muted }]}>Select Portion</Text>
 
           <FeedButton
             title="Small Portion"
-            onPress={() =>
-              handleFeed(DEVICE_CONFIG.PORTIONS.SMALL)
-            }
+            onPress={() => handleFeed(DEVICE_CONFIG.PORTIONS.SMALL)}
             isLoading={loading}
-            disabled={!isOnline}
+            disabled={!isOnline || !isOwner}
           />
-
           <FeedButton
             title="Large Portion"
-            onPress={() =>
-              handleFeed(DEVICE_CONFIG.PORTIONS.LARGE)
-            }
+            onPress={() => handleFeed(DEVICE_CONFIG.PORTIONS.LARGE)}
             isLoading={loading}
-            disabled={!isOnline}
+            disabled={!isOnline || !isOwner}
           />
         </View>
       </View>
