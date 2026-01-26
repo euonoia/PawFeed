@@ -19,7 +19,7 @@ export default function Onboarding() {
   const theme = useTheme(); 
 
   const handleGetStarted = () => {
-    router.push("/_setup/PowerOn");
+    router.push("/_auth/register");
   };
 
   return (

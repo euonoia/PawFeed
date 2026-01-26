@@ -1,30 +1,47 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { View } from "react-native";
+import { View, ActivityIndicator } from "react-native";
 import { useTheme } from "@/theme/useTheme";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function RootLayout() {
   const theme = useTheme();
+  const { user, loading } = useAuth();
 
-  // Check if current theme is dark to set the System UI style
+  // Determine system bar style based on theme
   const isDark = theme.text === "#F8FAFC" || theme.text === "#E5E7EB";
 
+ 
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.surface }}>
+        <ActivityIndicator size="large" color={theme.primary} />
+      </View>
+    );
+  }
+
   return (
-    // Wrap the stack in a themed View to prevent white flashes during transitions
     <View style={{ flex: 1, backgroundColor: theme.surface }}>
-      {/* Set global status bar and navigation bar style */}
       <StatusBar style={isDark ? "light" : "dark"} />
-      
+
       <Stack
         screenOptions={{
           headerShown: false,
-          // This ensures the background color of the navigator matches your theme
           contentStyle: { backgroundColor: theme.surface },
         }}
       >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="main" />
-        <Stack.Screen name="_setup" />
+        
+        {!user ? (
+          
+          <Stack.Screen name="_auth" />
+        ) : (
+         
+          <>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="main" />
+            <Stack.Screen name="_setup" />
+          </>
+        )}
       </Stack>
     </View>
   );
