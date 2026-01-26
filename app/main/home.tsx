@@ -5,8 +5,8 @@ import { useTheme } from "../../theme/useTheme";
 import { useDeviceStatus } from "../../hooks/useDeviceStatus";
 import { feedIfEmpty } from "../../services/esp32Service";
 import { DEVICE_CONFIG } from "../../config/deviceConfig";
-import { auth, rtdb } from "@/config/firebase";
-import { ref, get } from "firebase/database";
+import { rtdb, auth } from "@/config/firebase";
+import { ref, get, set } from "firebase/database";
 
 import ConnectionBadge from "../../components/connections/ConnnectionBadge";
 import FeedButton from "../../components/FeedButton";
@@ -18,34 +18,42 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
 
-  // Check owner on mount
+  // Check if logged in user is the owner
   useEffect(() => {
-    const checkOwner = async () => {
-      const user = auth.currentUser;
-      if (!user) return setIsOwner(false);
-
+    const checkOwnership = async () => {
+      if (!auth.currentUser) return;
       try {
-        const snapshot = await get(ref(rtdb, DEVICE_CONFIG.PATHS.OWNER(DEVICE_CONFIG.ID)));
-        setIsOwner(snapshot.exists() && snapshot.val() === user.uid);
+        const ownerRef = ref(rtdb, DEVICE_CONFIG.PATHS.OWNER(DEVICE_CONFIG.ID));
+        const snapshot = await get(ownerRef);
+        setIsOwner(snapshot.exists() && snapshot.val() === auth.currentUser?.uid);
       } catch (err) {
         console.error("Failed to check ownership:", err);
         setIsOwner(false);
       }
     };
-    checkOwner();
+    checkOwnership();
   }, []);
 
   const handleFeed = async (angle: number) => {
-    if (!isOnline) return Alert.alert("Offline", "Device is offline.");
-    if (!isOwner) return Alert.alert("Not Authorized", "You are not the owner.");
+    if (!isOnline) {
+      Alert.alert("Offline", "Cannot feed while device is offline.");
+      return;
+    }
+    if (!isOwner) {
+      Alert.alert("Not Authorized", "You are not the owner of this device.");
+      return;
+    }
 
     setLoading(true);
     try {
-      await feedIfEmpty(angle);
-      Alert.alert("Success", "Food dispensed!");
+      // Write targetAngle to the database
+      const targetRef = ref(rtdb, DEVICE_CONFIG.PATHS.SERVO_TARGET(DEVICE_CONFIG.ID));
+      await set(targetRef, angle);
+
+      Alert.alert("Success", "Yummy! Food dispensed.");
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to feed";
-      Alert.alert("Error", message);
+      const message = err instanceof Error ? err.message : "Failed to dispense food.";
+      Alert.alert("Cannot Feed", message);
     } finally {
       setLoading(false);
     }
@@ -56,9 +64,13 @@ export default function Home() {
       <View style={styles.container}>
         <Text style={[styles.headerTitle, { color: theme.text }]}>Pet Feeder 3000</Text>
 
+        {/* STATUS */}
         <ConnectionBadge online={isOnline} lastSeen={status?.lastSeen} />
+
+        {/* WEIGHT */}
         <WeightDisplay />
 
+        {/* CONTROLS */}
         <View style={styles.controlsContainer}>
           <Text style={[styles.sectionLabel, { color: theme.muted }]}>Select Portion</Text>
 
@@ -68,6 +80,7 @@ export default function Home() {
             isLoading={loading}
             disabled={!isOnline || !isOwner}
           />
+
           <FeedButton
             title="Large Portion"
             onPress={() => handleFeed(DEVICE_CONFIG.PORTIONS.LARGE)}
