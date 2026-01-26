@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet, Switch, Alert } from "react-native";
-import { useTheme } from "../../theme/useTheme";
-import { useSchedule } from "../../hooks/useSchedule";
-import ScheduleItemCard from "../../components/ScheduleItemcard";
-import { canDispenseFood } from "../../services/FeedGuardService";
+import { useTheme } from "../../../theme/useTheme";
+import { useSchedule } from "../../../hooks/useSchedule";
+import ScheduleItemCard from "../../../components/ScheduleItemcard";
+import { canDispenseFood } from "../../../services/FeedGuardService";
 
 export default function ScheduleScreen() {
   const theme = useTheme();

@@ -48,7 +48,7 @@ export default function Onboarding() {
   }, [user]);
 
   const handleGetStarted = () => {
-    router.push("/_setup/PowerOn");
+    router.push("/main/dashboard");
   };
 
   if (loading || checking) {

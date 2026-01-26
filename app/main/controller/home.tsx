@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTheme } from "../../theme/useTheme";
-import { useDeviceStatus } from "../../hooks/useDeviceStatus";
-import { feedIfEmpty } from "../../services/esp32Service";
-import { DEVICE_CONFIG } from "../../config/deviceConfig";
+import { useTheme } from "../../../theme/useTheme";
+import { useDeviceStatus } from "../../../hooks/useDeviceStatus";
+import { feedIfEmpty } from "../../../services/esp32Service";
+import { DEVICE_CONFIG } from "../../../config/deviceConfig";
 import { rtdb, auth } from "@/config/firebase";
 import { ref, get, set } from "firebase/database";
 
-import ConnectionBadge from "../../components/connections/ConnnectionBadge";
-import FeedButton from "../../components/FeedButton";
-import WeightDisplay from "../../components/weight/WeightDisplay";
+import ConnectionBadge from "../../../components/connections/ConnnectionBadge";
+import FeedButton from "../../../components/FeedButton";
+import WeightDisplay from "../../../components/weight/WeightDisplay";
 
 export default function Home() {
   const theme = useTheme();
