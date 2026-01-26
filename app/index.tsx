@@ -34,7 +34,7 @@ export default function Onboarding() {
       try {
         const setupDoc = await getDoc(doc(db, "users", user.uid, "setup", "status"));
         if (setupDoc.exists() && setupDoc.data().completed) {
-          // User already finished setup → redirect to login/main
+        
           router.replace("/_auth/login");
         }
       } catch (err) {
@@ -48,7 +48,7 @@ export default function Onboarding() {
   }, [user]);
 
   const handleGetStarted = () => {
-    router.push("/_setup/PowerOn");
+    router.push("/_auth/register");
   };
 
   if (loading || checking) {
