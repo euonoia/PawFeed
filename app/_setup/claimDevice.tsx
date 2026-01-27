@@ -44,7 +44,7 @@ export default function SetupDevice() {
         Alert.alert("Success", "Device successfully claimed!");
       }
 
-      router.replace("/main/home");
+      router.replace("/main/dashboard");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
       Alert.alert("Error", message);
