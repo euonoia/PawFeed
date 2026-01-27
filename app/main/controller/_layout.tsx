@@ -20,7 +20,7 @@ export default function ControllerLayout() {
       }}
     >
       <Drawer.Screen
-        name="home"
+        name="manualFeed"
         options={{
           title: "Manual Feed",
           drawerIcon: ({ color, size }) => (
