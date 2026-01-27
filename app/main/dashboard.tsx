@@ -1,9 +1,13 @@
 import { View, Text, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/theme/useTheme";
+import { useDeviceStatus } from "@/hooks/useDeviceStatus";
+import WeightDisplay from "@/components/weight/WeightDisplay";
+import ConnectionBadge from "@/components/connections/ConnnectionBadge";
 
-export default function dashboard() {
+export default function Dashboard() {
   const theme = useTheme();
+  const { status, isOnline } = useDeviceStatus();
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
@@ -11,28 +15,20 @@ export default function dashboard() {
         Pet Feeder Dashboard
       </Text>
 
-      <View style={[styles.card, { backgroundColor: theme.surface }]}>
-        <Text style={[styles.label, { color: theme.muted }]}>Device Status</Text>
-        <Text style={[styles.value, { color: theme.text }]}>Online</Text>
-      </View>
+      {/* CONNECTION — SAME COMPONENT */}
+      <ConnectionBadge
+        online={isOnline}
+        lastSeen={status?.lastSeen}
+      />
 
+      {/* WEIGHT — SAME COMPONENT */}
       <View style={[styles.card, { backgroundColor: theme.surface }]}>
-        <Text style={[styles.label, { color: theme.muted }]}>Last Feeding</Text>
-        <Text style={[styles.value, { color: theme.text }]}>
-          Today — 07:00 AM
-        </Text>
-      </View>
-
-      <View style={[styles.card, { backgroundColor: theme.surface }]}>
-        <Text style={[styles.label, { color: theme.muted }]}>Food Level</Text>
-        <Text style={[styles.value, { color: theme.text }]}>
-          85%
-        </Text>
+        <Text style={[styles.label, { color: theme.muted }]}>Food Weight</Text>
+        <WeightDisplay />
       </View>
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -51,9 +47,5 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     marginBottom: 6,
-  },
-  value: {
-    fontSize: 20,
-    fontWeight: "600",
   },
 });
