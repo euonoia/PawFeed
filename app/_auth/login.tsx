@@ -31,7 +31,7 @@ export default function Login() {
     try {
       setLoading(true);
       await signInWithEmailAndPassword(auth, email.trim(), password);
-      router.replace("/main/home");
+      router.replace("/main/dashboard");
     } catch (error: any) {
       Alert.alert("Login Failed", error.message);
     } finally {

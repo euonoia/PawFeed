@@ -1,9 +1,14 @@
-import { Tabs } from "expo-router";
+import { Tabs, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/theme/useTheme";
+import { auth } from "@/config/firebase";
 
 export default function TabsLayout() {
   const theme = useTheme();
+
+  if (!auth.currentUser) {
+    return <Redirect href="/_auth/login" />;
+  }
 
   return (
     <Tabs

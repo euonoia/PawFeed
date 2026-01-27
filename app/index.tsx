@@ -48,7 +48,7 @@ export default function Onboarding() {
   }, [user]);
 
   const handleGetStarted = () => {
-    router.push("/main/dashboard");
+    router.push("/_auth/login");
   };
 
   if (loading || checking) {
