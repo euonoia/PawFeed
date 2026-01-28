@@ -34,9 +34,9 @@ export default function FeedButton({ title, onPress, isLoading, disabled }: Prop
 
 const styles = StyleSheet.create({
   button: {
-    width: "100%", // Fill the card/container width
+    width: "100%", 
     paddingVertical: 18,
-    borderRadius: 18, // Matching your "I'm Connected" button
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",

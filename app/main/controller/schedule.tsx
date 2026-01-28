@@ -1,6 +1,5 @@
 import React from "react";
 import { View, Text, StyleSheet, Switch, Alert, ScrollView } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../../theme/useTheme";
 import { useSchedule } from "../../../hooks/useSchedule";
 import ScheduleItemCard from "../../../components/ScheduleItemcard";
@@ -40,13 +39,13 @@ export default function ScheduleScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.surface }]}>
+    <View style={[styles.container, { backgroundColor: theme.surface }]}>
       <ScrollView contentContainerStyle={styles.content}>
         
-        {/* Consistent Header */}
+        {/* Adjusted Header Section */}
         <View style={styles.headerSection}>
           <Text style={[styles.stepText, { color: theme.primary }]}>AUTOMATION</Text>
-          <Text style={[styles.title, { color: theme.text }]}>Schedule</Text>
+          {/* Large "Schedule" title removed - now in Top Nav Bar */}
           <Text style={[styles.description, { color: theme.muted }]}>
             Set up recurring feeding times for your pet throughout the day.
           </Text>
@@ -99,37 +98,32 @@ export default function ScheduleScreen() {
         </View>
 
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
   },
   content: {
     paddingHorizontal: 24,
-    paddingTop: 40,
+    paddingTop: 32, // Reduced to match Manual Feed refinement
     paddingBottom: 40,
   },
   headerSection: {
-    marginBottom: 32,
+    marginBottom: 24,
   },
   stepText: {
     fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1.5,
     textTransform: "uppercase",
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "900",
-    marginBottom: 12,
+    marginBottom: 8,
   },
   description: {
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 15,
+    lineHeight: 22,
   },
   masterCard: {
     flexDirection: "row",
