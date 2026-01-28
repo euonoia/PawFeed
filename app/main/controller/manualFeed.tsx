@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, Alert, ScrollView } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../../theme/useTheme";
 import { DEVICE_CONFIG } from "../../../config/deviceConfig";
 import { rtdb } from "@/config/firebase";
@@ -21,7 +20,6 @@ export default function ManualFeed() {
         DEVICE_CONFIG.PATHS.SERVO_TARGET(DEVICE_CONFIG.ID)
       );
       await set(targetRef, angle);
-      // Removed Alert to keep it premium, or you could use a toast
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to dispense food.";
       Alert.alert("Error", message);
@@ -31,13 +29,13 @@ export default function ManualFeed() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.surface }]}>
+    <View style={[styles.container, { backgroundColor: theme.surface }]}>
       <ScrollView contentContainerStyle={styles.content}>
         
-        {/* Header Section matching Setup UI */}
+        {/* Header Section - Refined for Drawer Layout */}
         <View style={styles.header}>
           <Text style={[styles.stepText, { color: theme.primary }]}>ACTION CENTER</Text>
-          <Text style={[styles.title, { color: theme.text }]}>Manual Feed</Text>
+          {/* Large title removed as it's now in the Top Nav Bar */}
           <Text style={[styles.description, { color: theme.muted }]}>
             Select a portion size below to dispense food to your pet immediately.
           </Text>
@@ -46,7 +44,9 @@ export default function ManualFeed() {
         {/* Portion Selection Card */}
         <View style={[styles.card, { backgroundColor: theme.background }]}>
           <View style={styles.cardHeader}>
-             <Ionicons name="fast-food-outline" size={20} color={theme.primary} />
+             <View style={[styles.iconCircle, { backgroundColor: theme.primary + '15' }]}>
+                <Ionicons name="fast-food-outline" size={18} color={theme.primary} />
+             </View>
              <Text style={[styles.label, { color: theme.muted }]}>SELECT PORTION</Text>
           </View>
 
@@ -55,7 +55,6 @@ export default function ManualFeed() {
               title="Small Portion"
               onPress={() => handleFeed(DEVICE_CONFIG.PORTIONS.SMALL)}
               isLoading={loading}
-              // Suggestion: Update FeedButton style internally to match theme.primary and borderRadius: 18
             />
 
             <View style={[styles.divider, { backgroundColor: theme.muted + '15' }]} />
@@ -76,36 +75,32 @@ export default function ManualFeed() {
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
   },
   content: {
     paddingHorizontal: 24,
-    paddingTop: 40,
+    paddingTop: 32, // Reduced padding since the Header is now present
+    paddingBottom: 40,
   },
   header: {
-    marginBottom: 32,
+    marginBottom: 24,
   },
   stepText: {
     fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1.5,
     textTransform: "uppercase",
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "900",
-    marginBottom: 12,
+    marginBottom: 8,
   },
   description: {
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 15,
+    lineHeight: 22,
   },
   card: {
     borderRadius: 24,
@@ -121,8 +116,15 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
     marginBottom: 20,
+  },
+  iconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
   },
   label: {
     fontSize: 11,
@@ -135,13 +137,13 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    marginVertical: 8,
+    marginVertical: 10,
   },
   infoBox: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 30,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     gap: 12,
   },
   infoText: {

@@ -1,5 +1,6 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from "react-native";
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from "react-native";
+import { useTheme } from "@/theme/useTheme";
 
 interface Props {
   title: string;
@@ -9,14 +10,21 @@ interface Props {
 }
 
 export default function FeedButton({ title, onPress, isLoading, disabled }: Props) {
+  const theme = useTheme();
+
   return (
     <TouchableOpacity
-      style={[styles.button, disabled && styles.disabled]}
+      activeOpacity={0.8}
+      style={[
+        styles.button,
+        { backgroundColor: theme.primary },
+        (disabled || isLoading) && { backgroundColor: theme.muted + '50', elevation: 0 }
+      ]}
       onPress={onPress}
       disabled={disabled || isLoading}
     >
       {isLoading ? (
-        <ActivityIndicator color="#fff" />
+        <ActivityIndicator color="#FFF" />
       ) : (
         <Text style={styles.text}>{title}</Text>
       )}
@@ -26,18 +34,21 @@ export default function FeedButton({ title, onPress, isLoading, disabled }: Prop
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: "#4c51bf",
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 12,
-    marginVertical: 8,
-    width: "80%",
+    width: "100%", // Fill the card/container width
+    paddingVertical: 18,
+    borderRadius: 18, // Matching your "I'm Connected" button
     alignItems: "center",
+    justifyContent: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  disabled: { backgroundColor: "#a0aec0" },
-  text: { color: "white", fontSize: 18, fontWeight: "600" },
+  text: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
 });
