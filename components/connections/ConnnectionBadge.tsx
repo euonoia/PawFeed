@@ -12,14 +12,17 @@ export default function ConnectionBadge({ online, lastSeen }: Props) {
       <Text style={styles.text}>
         {online ? "🟢 Connected" : "🔴 Offline"}
       </Text>
-      {!online && lastSeen && (
+
+      {!online && typeof lastSeen === "number" && (
         <Text style={styles.subText}>
-          Last seen: {new Date(lastSeen * 1000).toLocaleTimeString()}
+          Last seen:{" "}
+          {new Date(lastSeen * 1000).toLocaleTimeString()}
         </Text>
       )}
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
