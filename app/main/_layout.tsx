@@ -6,6 +6,7 @@ import { auth } from "@/config/firebase";
 export default function TabsLayout() {
   const theme = useTheme();
 
+  // Basic auth guard
   if (!auth.currentUser) {
     return <Redirect href="/_auth/login" />;
   }
@@ -15,23 +16,37 @@ export default function TabsLayout() {
       initialRouteName="dashboard"
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.secondary,
+        // Using Primary to match the buttons and "Step" text color
+        tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: theme.muted,
         tabBarStyle: {
           backgroundColor: theme.surface,
-          height: 64,
-          paddingBottom: 8,
-          paddingTop: 6,
-          borderTopWidth: 0,
+          height: 70, // Slightly taller for a more premium feel
+          paddingBottom: 12,
+          paddingTop: 10,
+          borderTopWidth: 1,
+          borderColor: 'rgba(0,0,0,0.05)',
+          elevation: 0, // Flat look
+          shadowOpacity: 0,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "800", // Bold weights consistent with Setup UI
+          letterSpacing: 0.5,
+          textTransform: "uppercase",
         },
       }}
     >
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: "Dashboard",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="grid-outline" size={size} color={color} />
+          title: "DASHBOARD",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons 
+              name={focused ? "grid" : "grid-outline"} 
+              size={22} 
+              color={color} 
+            />
           ),
         }}
       />
@@ -39,9 +54,13 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="controller"
         options={{
-          title: "Controller",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="menu-outline" size={size} color={color} />
+          title: "CONTROLLER",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons 
+              name={focused ? "game-controller" : "game-controller-outline"} 
+              size={24} 
+              color={color} 
+            />
           ),
         }}
       />
