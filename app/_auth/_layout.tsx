@@ -1,4 +1,3 @@
-
 import { Stack } from "expo-router";
 import { useTheme } from "@/theme/useTheme";
 
