@@ -10,7 +10,7 @@ export default function RootLayout() {
 
   const isDark = theme.text === "#F8FAFC" || theme.text === "#E5E7EB";
 
-
+  
   if (loading) {
     return (
       <View
@@ -26,26 +26,20 @@ export default function RootLayout() {
     );
   }
 
-  return (
-    <View style={{ flex: 1, backgroundColor: theme.surface }}>
-      <StatusBar style={isDark ? "light" : "dark"} />
-
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: theme.surface },
-        }}
-      >
-       
-        {!user && <Stack.Screen name="_auth" />}
-
-       
-        {user && <Stack.Screen name="main" />}
-
-      
-        <Stack.Screen name="_setup" />
-        <Stack.Screen name="index" />
+ 
+  if (!user) {
+    return (
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="_auth" />
       </Stack>
-    </View>
+    );
+  }
+
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="main" />
+      <Stack.Screen name="_setup" />
+      <Stack.Screen name="index" />
+    </Stack>
   );
 }

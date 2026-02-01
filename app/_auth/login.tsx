@@ -32,19 +32,17 @@ export default function Login() {
     try {
       setLoading(true);
 
-      // Sign in with Firebase
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email.trim(),
         password
       );
-
       const user = userCredential.user;
 
-      // Save user UID in AsyncStorage
+      
       await AsyncStorage.setItem("userUID", user.uid);
 
-      // Navigate to main dashboard
+    
       router.replace("/main/dashboard");
     } catch (error: any) {
       Alert.alert("Login Failed", error.message);
