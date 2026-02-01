@@ -1,9 +1,13 @@
 import { Drawer } from "expo-router/drawer";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/theme/useTheme";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function ControllerLayout() {
   const theme = useTheme();
+  const { user } = useAuth();
+
+  if (!user) return null; 
 
   return (
     <Drawer
@@ -41,7 +45,6 @@ export default function ControllerLayout() {
         }
       }}
     >
-      
       <Drawer.Screen
         name="manualFeed"
         options={{
@@ -52,8 +55,6 @@ export default function ControllerLayout() {
           ),
         }}
       />
-
-    
       <Drawer.Screen
         name="schedule"
         options={{
