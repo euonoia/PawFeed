@@ -1,45 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { Tabs, Redirect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useTheme } from "@/theme/useTheme";
 import { auth } from "@/config/firebase";
+import { useTheme } from "@/theme/useTheme";
 
 export default function TabsLayout() {
   const theme = useTheme();
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null); 
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const checkUser = async () => {
-      try {
-       
-        if (auth.currentUser) {
-          setIsLoggedIn(true);
-          // Save UID to AsyncStorage
-          await AsyncStorage.setItem("userUID", auth.currentUser.uid);
-          return;
-        }
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) setIsLoggedIn(true);
+      else setIsLoggedIn(false);
+    });
 
-        
-        const storedUID = await AsyncStorage.getItem("userUID");
-        if (storedUID) {
-          setIsLoggedIn(true);
-        } else {
-          setIsLoggedIn(false);
-        }
-      } catch (err) {
-        console.error("Error checking login state:", err);
-        setIsLoggedIn(false);
-      }
-    };
-
-    checkUser();
+    return unsubscribe; 
   }, []);
 
- 
   if (isLoggedIn === null) return null;
-
-  
   if (!isLoggedIn) return <Redirect href="/_auth/login" />;
 
   return (
@@ -80,7 +58,6 @@ export default function TabsLayout() {
           ),
         }}
       />
-
       <Tabs.Screen
         name="controller"
         options={{
