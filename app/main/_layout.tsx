@@ -6,7 +6,6 @@ import { auth } from "@/config/firebase";
 export default function TabsLayout() {
   const theme = useTheme();
 
-  // Basic auth guard
   if (!auth.currentUser) {
     return <Redirect href="/_auth/login" />;
   }
@@ -16,22 +15,22 @@ export default function TabsLayout() {
       initialRouteName="dashboard"
       screenOptions={{
         headerShown: false,
-        // Using Primary to match the buttons and "Step" text color
+        
         tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: theme.muted,
         tabBarStyle: {
           backgroundColor: theme.surface,
-          height: 70, // Slightly taller for a more premium feel
+          height: 70, 
           paddingBottom: 12,
           paddingTop: 10,
           borderTopWidth: 1,
           borderColor: 'rgba(0,0,0,0.05)',
-          elevation: 0, // Flat look
+          elevation: 0, 
           shadowOpacity: 0,
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: "800", // Bold weights consistent with Setup UI
+          fontWeight: "800",
           letterSpacing: 0.5,
           textTransform: "uppercase",
         },
