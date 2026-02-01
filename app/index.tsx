@@ -1,22 +1,12 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Dimensions,
-  Image,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, StyleSheet, Image, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/theme/useTheme";
 import { useAuth } from "@/hooks/useAuth";
 import { doc, getDoc } from "firebase/firestore";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { db } from "@/config/firebase";
-
-const { height } = Dimensions.get("window");
-const isSmallScreen = height < 700;
 
 export default function Index() {
   const router = useRouter();
@@ -28,23 +18,27 @@ export default function Index() {
     const decideRoute = async () => {
       if (loading) return;
 
-      if (!user) {
-        router.replace("/_auth/login");
-        return;
-      }
-
       try {
+        // No user logged in → go to login
+        if (!user) {
+          router.replace("/_auth/login");
+          return;
+        }
+
+        // Check if user exists in Firestore
         const userRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(userRef);
 
-      
         if (!userSnap.exists()) {
+          // New user → register
           router.replace("/_auth/register");
-        }
-      
-        else {
+        } else {
+          // Existing user → login
           router.replace("/_auth/login");
         }
+
+        // Optionally, save UID in AsyncStorage
+        await AsyncStorage.setItem("uid", user.uid);
       } catch (error) {
         console.error("Index routing error:", error);
         router.replace("/_auth/login");
@@ -56,15 +50,15 @@ export default function Index() {
     decideRoute();
   }, [user, loading]);
 
-  // Hard loading gate (no UI flicker)
+  // Loading screen while checking
   if (loading || checking) {
     return (
       <View
         style={{
           flex: 1,
-          backgroundColor: theme.surface,
           justifyContent: "center",
           alignItems: "center",
+          backgroundColor: theme.surface,
         }}
       >
         <ActivityIndicator size="large" color={theme.primary} />
@@ -72,51 +66,34 @@ export default function Index() {
     );
   }
 
-  // Fallback UI (almost never visible)
+  // Fallback UI (almost never seen)
   return (
-    <View style={[styles.container, { backgroundColor: theme.surface }]}>
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.center}>
-          <Image
-            source={require("../assets/pawfeed.png")}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <Text style={[styles.title, { color: theme.text }]}>
-            PawFeed
-          </Text>
-          <Text style={[styles.subtitle, { color: theme.muted }]}>
-            Preparing your experience…
-          </Text>
-        </View>
-      </SafeAreaView>
-    </View>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.surface }]}>
+      <View style={styles.center}>
+        <Image
+          source={require("../assets/pawfeed.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={[styles.title, { color: theme.text }]}>PawFeed</Text>
+        <Text style={[styles.subtitle, { color: theme.muted }]}>
+          Preparing your experience…
+        </Text>
+      </View>
+    </SafeAreaView>
   );
 }
 
 /* ---------------- STYLES ---------------- */
-
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  safeArea: { flex: 1 },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 30,
   },
-  logo: {
-    width: 120,
-    height: 120,
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "900",
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 16,
-    textAlign: "center",
-  },
+  logo: { width: 120, height: 120, marginBottom: 20 },
+  title: { fontSize: 32, fontWeight: "900", marginBottom: 10 },
+  subtitle: { fontSize: 16, textAlign: "center" },
 });
