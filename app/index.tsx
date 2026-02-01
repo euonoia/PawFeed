@@ -1,47 +1,54 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Image, ActivityIndicator } from "react-native";
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  Image, 
+  TouchableOpacity, 
+  Dimensions, 
+  ActivityIndicator 
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/theme/useTheme";
 import { useAuth } from "@/hooks/useAuth";
 import { doc, getDoc } from "firebase/firestore";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { db } from "@/config/firebase";
+
+const { height } = Dimensions.get("window");
+const isSmallScreen = height < 700;
 
 export default function Index() {
   const router = useRouter();
   const theme = useTheme();
   const { user, loading } = useAuth();
   const [checking, setChecking] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     const decideRoute = async () => {
       if (loading) return;
 
+      if (!user) {
+        // New or not logged-in → show onboarding
+        setShowOnboarding(true);
+        setChecking(false);
+        return;
+      }
+
       try {
-        if (!user) {
-          // No user logged in
-          router.replace("/_auth/login");
-          return;
-        }
-
-        // Check Firestore if user exists
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
-
-        if (!userSnap.exists()) {
-          // New user → go to register
-          router.replace("/_auth/register");
-        } else {
-          // Existing user → go to main dashboard
+        const setupDoc = await getDoc(doc(db, "users", user.uid, "setup", "status"));
+        if (setupDoc.exists() && setupDoc.data().completed) {
+          // Existing user → dashboard
           router.replace("/main/dashboard");
+        } else {
+          // New user → show onboarding
+          setShowOnboarding(true);
         }
-
-        // Cache UID in AsyncStorage
-        await AsyncStorage.setItem("uid", user.uid);
-      } catch (error) {
-        console.error("Index routing error:", error);
-        router.replace("/_auth/login");
+      } catch (err) {
+        console.error("Routing error:", err);
+        // On error, show onboarding anyway
+        setShowOnboarding(true);
       } finally {
         setChecking(false);
       }
@@ -49,6 +56,10 @@ export default function Index() {
 
     decideRoute();
   }, [user, loading]);
+
+  const handleGetStarted = () => {
+    router.push("/_auth/register");
+  };
 
   if (loading || checking) {
     return (
@@ -65,32 +76,118 @@ export default function Index() {
     );
   }
 
+  if (!showOnboarding) {
+    return null; // Should never show; safety fallback
+  }
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.surface }]}>
-      <View style={styles.center}>
-        <Image
-          source={require("../assets/pawfeed.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-        <Text style={[styles.title, { color: theme.text }]}>PawFeed</Text>
-        <Text style={[styles.subtitle, { color: theme.muted }]}>
-          Preparing your experience…
-        </Text>
-      </View>
-    </SafeAreaView>
+    <View style={[styles.container, { backgroundColor: theme.surface }]}>
+      <View style={[styles.diagonalBackground, { backgroundColor: theme.background }]} />
+
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <View style={styles.titleContainer}>
+            <Text style={[styles.title, { color: theme.text }]}>
+              Welcome to{"\n"}PawFeed
+            </Text>
+            <View style={[styles.badge, { backgroundColor: theme.primary + '20' }]}>
+              <Text style={[styles.badgeText, { color: theme.primary }]}>
+                Smart Pet Care
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.logoContainer}>
+            <View style={[
+              styles.iconCircle, 
+              { 
+                backgroundColor: "#FFFFFF", 
+                borderColor: theme.primary + '30',
+                shadowColor: "#000" 
+              }
+            ]}>
+              <Image
+                source={require("../assets/pawfeed.png")}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.content}>
+          <Text style={[styles.subtitle, { color: theme.text }]}>
+            Ensuring your furry friends never miss a meal.
+          </Text>
+          <Text style={[styles.description, { color: theme.muted }]}>
+            Follow the setup guide to connect your PawFeed device and start managing your pet's feeding schedule with ease and convenience.
+          </Text>
+        </View>
+
+        <View style={styles.footer}>
+          <TouchableOpacity 
+            style={[styles.button, { backgroundColor: theme.primary, shadowColor: theme.primary }]} 
+            activeOpacity={0.8}
+            onPress={handleGetStarted}
+          >
+            <Text style={styles.buttonText}>Get Started</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.supportButton}>
+            <Text style={[styles.helpText, { color: theme.muted }]}>
+              Need help? Visit support center
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </View>
   );
 }
 
+// --- Styles ---
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 30,
+  diagonalBackground: {
+    position: "absolute",
+    top: -height * 0.1,
+    left: 0,
+    right: 0,
+    height: height * 0.45,
+    transform: [{ skewY: "-10deg" }],
   },
-  logo: { width: 120, height: 120, marginBottom: 20 },
-  title: { fontSize: 32, fontWeight: "900", marginBottom: 10 },
-  subtitle: { fontSize: 16, textAlign: "center" },
+  safeArea: { flex: 1 },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    paddingHorizontal: 30,
+    paddingTop: isSmallScreen ? 30 : 50,
+    height: height * 0.32,
+  },
+  titleContainer: { flex: 1, paddingTop: 10 },
+  title: { fontSize: isSmallScreen ? 34 : 42, fontWeight: "900", letterSpacing: -1, lineHeight: isSmallScreen ? 38 : 46 },
+  badge: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, marginTop: 12 },
+  badgeText: { fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },
+  logoContainer: { justifyContent: "center", alignItems: "center" },
+  iconCircle: {
+    width: isSmallScreen ? 90 : 110,
+    height: isSmallScreen ? 90 : 110,
+    borderRadius: 60,
+    borderWidth: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  logoImage: { width: '75%', height: '75%' },
+  content: { flex: 1, paddingHorizontal: 35, justifyContent: "center", marginTop: -20 },
+  subtitle: { fontSize: 22, fontWeight: '700', textAlign: "center", marginBottom: 15, lineHeight: 28 },
+  description: { fontSize: 16, textAlign: "center", lineHeight: 24, paddingHorizontal: 10 },
+  footer: { paddingHorizontal: 30, paddingBottom: isSmallScreen ? 30 : 50 },
+  button: { paddingVertical: 18, borderRadius: 18, alignItems: "center", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.25, shadowRadius: 15, elevation: 8 },
+  buttonText: { color: "#FFFFFF", fontSize: 18, fontWeight: "800" },
+  supportButton: { marginTop: 20, paddingVertical: 10 },
+  helpText: { textAlign: "center", fontSize: 14, fontWeight: '600', textDecorationLine: "underline" },
 });
