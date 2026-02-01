@@ -19,7 +19,7 @@ export default function Register() {
     try {
       const snapshot = await get(ref(rtdb, "devices/feeder_001/owner"));
       if (snapshot.exists() && snapshot.val() === uid) {
-        router.replace("/main/home"); // Skip setup
+        router.replace("/main/dashboard"); 
       }
     } catch (error) {
       console.log("Error checking existing device:", error);
