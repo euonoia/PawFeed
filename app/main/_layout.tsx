@@ -1,24 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { Tabs, Redirect } from "expo-router";
+import React from "react";
+import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { auth } from "@/config/firebase";
 import { useTheme } from "@/theme/useTheme";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function TabsLayout() {
   const theme = useTheme();
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const { user } = useAuth();
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) setIsLoggedIn(true);
-      else setIsLoggedIn(false);
-    });
-
-    return unsubscribe; 
-  }, []);
-
-  if (isLoggedIn === null) return null;
-  if (!isLoggedIn) return <Redirect href="/_auth/login" />;
+  if (!user) return null;
 
   return (
     <Tabs
