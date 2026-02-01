@@ -18,7 +18,7 @@ export const firebaseApp =
     ? initializeApp(firebaseConfig)
     : getApp();
 
-/** Firebase services */
+
 export const auth = getAuth(firebaseApp);
 export const db = getFirestore(firebaseApp);
 export const rtdb = getDatabase(firebaseApp);
