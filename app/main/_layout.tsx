@@ -7,12 +7,12 @@ import { auth } from "@/config/firebase";
 
 export default function TabsLayout() {
   const theme = useTheme();
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null); // null = checking
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null); 
 
   useEffect(() => {
     const checkUser = async () => {
       try {
-        // First check Firebase memory currentUser
+       
         if (auth.currentUser) {
           setIsLoggedIn(true);
           // Save UID to AsyncStorage
@@ -20,7 +20,7 @@ export default function TabsLayout() {
           return;
         }
 
-        // Check AsyncStorage if app was reloaded
+        
         const storedUID = await AsyncStorage.getItem("userUID");
         if (storedUID) {
           setIsLoggedIn(true);
@@ -36,10 +36,10 @@ export default function TabsLayout() {
     checkUser();
   }, []);
 
-  // Show loading while checking
+ 
   if (isLoggedIn === null) return null;
 
-  // Redirect if not logged in
+  
   if (!isLoggedIn) return <Redirect href="/_auth/login" />;
 
   return (
