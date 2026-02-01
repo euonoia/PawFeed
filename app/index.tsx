@@ -19,24 +19,25 @@ export default function Index() {
       if (loading) return;
 
       try {
-    
         if (!user) {
+          // No user logged in
           router.replace("/_auth/login");
           return;
         }
 
-       
+        // Check Firestore if user exists
         const userRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(userRef);
 
         if (!userSnap.exists()) {
-         
+          // New user → go to register
           router.replace("/_auth/register");
         } else {
-         
-          router.replace("/_auth/login");
+          // Existing user → go to main dashboard
+          router.replace("/main/dashboard");
         }
 
+        // Cache UID in AsyncStorage
         await AsyncStorage.setItem("uid", user.uid);
       } catch (error) {
         console.error("Index routing error:", error);
@@ -49,7 +50,6 @@ export default function Index() {
     decideRoute();
   }, [user, loading]);
 
-  
   if (loading || checking) {
     return (
       <View
