@@ -9,6 +9,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "@/config/firebase";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Dashboard() {
   const theme = useTheme();
@@ -17,7 +18,13 @@ export default function Dashboard() {
 
   const handleLogout = async () => {
     try {
+      // Sign out from Firebase
       await signOut(auth);
+
+      // Remove stored UID from AsyncStorage
+      await AsyncStorage.removeItem("userUID");
+
+      // Redirect to login
       router.replace("/_auth/login");
     } catch {
       Alert.alert("Logout Failed", "Please try again.");
@@ -51,7 +58,7 @@ export default function Dashboard() {
           />
         </View>
 
-        {/* WEIGHT CARD - Using the same card styling as the setup page */}
+        {/* WEIGHT CARD */}
         <View style={[styles.card, { backgroundColor: theme.background }]}>
           <View style={styles.cardHeader}>
             <View style={[styles.iconCircle, { backgroundColor: theme.primary + '15' }]}>
@@ -78,86 +85,19 @@ export default function Dashboard() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-  },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  stepText: {
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 1.5,
-    textTransform: "uppercase",
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "900",
-  },
-  iconButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-  },
-  statusSection: {
-    marginBottom: 24,
-  },
-  card: {
-    borderRadius: 24,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 16,
-  },
-  iconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-  },
-  weightContainer: {
-    paddingVertical: 10,
-  },
-  divider: {
-    height: 1,
-    marginVertical: 16,
-  },
-  cardAction: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
-  },
-  actionText: {
-    fontSize: 14,
-    fontWeight: "700",
-  },
+  container: { flex: 1 },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 20 },
+  headerRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 24 },
+  stepText: { fontSize: 12, fontWeight: "800", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 },
+  title: { fontSize: 32, fontWeight: "900" },
+  iconButton: { width: 48, height: 48, borderRadius: 16, justifyContent: "center", alignItems: "center", borderWidth: 1, borderColor: 'rgba(0,0,0,0.05)' },
+  statusSection: { marginBottom: 24 },
+  card: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(0,0,0,0.05)', shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
+  cardHeader: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 16 },
+  iconCircle: { width: 36, height: 36, borderRadius: 18, justifyContent: "center", alignItems: "center" },
+  label: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5 },
+  weightContainer: { paddingVertical: 10 },
+  divider: { height: 1, marginVertical: 16 },
+  cardAction: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4 },
+  actionText: { fontSize: 14, fontWeight: "700" },
 });
