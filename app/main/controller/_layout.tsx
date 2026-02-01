@@ -2,12 +2,14 @@ import { Drawer } from "expo-router/drawer";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/theme/useTheme";
 import { useAuth } from "@/hooks/useAuth";
+import { Redirect } from "expo-router";
 
 export default function ControllerLayout() {
   const theme = useTheme();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
-  if (!user) return null; 
+  if (loading) return null; 
+  if (!user) return <Redirect href="/_auth/login" />;
 
   return (
     <Drawer
@@ -29,11 +31,11 @@ export default function ControllerLayout() {
           backgroundColor: theme.surface,
           width: 280,
           borderRightWidth: 1,
-          borderColor: 'rgba(0,0,0,0.05)',
+          borderColor: "rgba(0,0,0,0.05)",
         },
         drawerActiveTintColor: theme.primary,
         drawerInactiveTintColor: theme.muted,
-        drawerActiveBackgroundColor: theme.primary + '10',
+        drawerActiveBackgroundColor: theme.primary + "10",
         drawerLabelStyle: {
           fontSize: 14,
           fontWeight: "700",
@@ -42,13 +44,13 @@ export default function ControllerLayout() {
         drawerItemStyle: {
           borderRadius: 12,
           marginHorizontal: 12,
-        }
+        },
       }}
     >
       <Drawer.Screen
         name="manualFeed"
         options={{
-          title: "Manual Feed", 
+          title: "Manual Feed",
           drawerLabel: "Manual Feed",
           drawerIcon: ({ color, size }) => (
             <Ionicons name="fast-food-outline" size={size} color={color} />

@@ -10,7 +10,7 @@ export default function RootLayout() {
 
   const isDark = theme.text === "#F8FAFC" || theme.text === "#E5E7EB";
 
-  
+
   if (loading) {
     return (
       <View
@@ -39,9 +39,10 @@ export default function RootLayout() {
        
         {!user && <Stack.Screen name="_auth" />}
 
-    
+       
         {user && <Stack.Screen name="main" />}
 
+      
         <Stack.Screen name="_setup" />
         <Stack.Screen name="index" />
       </Stack>
