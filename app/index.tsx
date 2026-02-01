@@ -19,25 +19,24 @@ export default function Index() {
       if (loading) return;
 
       try {
-        // No user logged in → go to login
+    
         if (!user) {
           router.replace("/_auth/login");
           return;
         }
 
-        // Check if user exists in Firestore
+       
         const userRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(userRef);
 
         if (!userSnap.exists()) {
-          // New user → register
+         
           router.replace("/_auth/register");
         } else {
-          // Existing user → login
+         
           router.replace("/_auth/login");
         }
 
-        // Optionally, save UID in AsyncStorage
         await AsyncStorage.setItem("uid", user.uid);
       } catch (error) {
         console.error("Index routing error:", error);
@@ -50,7 +49,7 @@ export default function Index() {
     decideRoute();
   }, [user, loading]);
 
-  // Loading screen while checking
+  
   if (loading || checking) {
     return (
       <View
@@ -66,7 +65,6 @@ export default function Index() {
     );
   }
 
-  // Fallback UI (almost never seen)
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.surface }]}>
       <View style={styles.center}>
@@ -84,7 +82,6 @@ export default function Index() {
   );
 }
 
-/* ---------------- STYLES ---------------- */
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: {
