@@ -6,15 +6,22 @@ import { useAuth } from "@/hooks/useAuth";
 
 export default function RootLayout() {
   const theme = useTheme();
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
 
-  // Determine system bar style based on theme
-  const isDark = theme.text === "#F8FAFC" || theme.text === "#E5E7EB";
+  const isDark =
+    theme.text === "#F8FAFC" || theme.text === "#E5E7EB";
 
- 
+  // Global auth loading gate
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.surface }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: theme.surface,
+        }}
+      >
         <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
@@ -30,18 +37,17 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: theme.surface },
         }}
       >
+      
+        <Stack.Screen name="index" />
+
+       
+        <Stack.Screen name="_auth" />
+
         
-        {!user ? (
-          
-          <Stack.Screen name="_auth" />
-        ) : (
-         
-          <>
-            <Stack.Screen name="index" />
-            <Stack.Screen name="main" />
-            <Stack.Screen name="_setup" />
-          </>
-        )}
+        <Stack.Screen name="_setup" />
+
+       
+        <Stack.Screen name="main" />
       </Stack>
     </View>
   );
