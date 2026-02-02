@@ -5,7 +5,7 @@ import { useTheme } from "@/theme/useTheme";
 import { useDeviceStatus } from "@/hooks/useDeviceStatus";
 import WeightDisplay from "@/components/weight/WeightDisplay";
 import ConnectionBadge from "@/components/connections/ConnnectionBadge";
-import { signOut } from "firebase/auth";
+import { useLogout } from "@/hooks/useLogout";
 import { auth } from "@/config/firebase";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,21 +15,8 @@ export default function Dashboard() {
   const theme = useTheme();
   const { status, isOnline } = useDeviceStatus();
   const router = useRouter();
+  const { logout } = useLogout();
 
-  const handleLogout = async () => {
-    try {
-      // Sign out from Firebase
-      await signOut(auth);
-
-      // Remove stored UID from AsyncStorage
-      await AsyncStorage.removeItem("userUID");
-
-      // Redirect to login
-      router.replace("/_auth/login");
-    } catch {
-      Alert.alert("Logout Failed", "Please try again.");
-    }
-  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.surface }]}>
@@ -41,13 +28,12 @@ export default function Dashboard() {
             <Text style={[styles.stepText, { color: theme.primary }]}>OVERVIEW</Text>
             <Text style={[styles.title, { color: theme.text }]}>PawFeed</Text>
           </View>
-          
-          <TouchableOpacity 
-            onPress={handleLogout}
-            style={[styles.iconButton, { backgroundColor: theme.background }]}
-          >
-            <Ionicons name="log-out-outline" size={22} color={theme.muted} />
-          </TouchableOpacity>
+         <TouchableOpacity 
+          onPress={logout}
+          style={[styles.iconButton, { backgroundColor: theme.background }]}
+        >
+          <Ionicons name="log-out-outline" size={22} color={theme.muted} />
+        </TouchableOpacity>
         </View>
 
         {/* CONNECTION STATUS */}

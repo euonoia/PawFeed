@@ -4,7 +4,6 @@ import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getDatabase } from 'firebase/database';
 
-// Firebase config
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY!,
   authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN!,
@@ -15,10 +14,9 @@ const firebaseConfig = {
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID!,
 };
 
-// Initialize Firebase App
+
 export const firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-// Initialize Auth with AsyncStorage persistence (React Native)
 export const auth =
   getApps().length > 0
     ? initializeAuth(firebaseApp, {
@@ -27,7 +25,5 @@ export const auth =
     : initializeAuth(firebaseApp, {
         persistence: getReactNativePersistence(AsyncStorage),
       });
-
-// Firestore & Realtime Database
 export const db = getFirestore(firebaseApp);
 export const rtdb = getDatabase(firebaseApp);
