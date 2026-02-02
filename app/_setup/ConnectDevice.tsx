@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Clipboard } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity,  Clipboard } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/theme/useTheme";
@@ -10,7 +11,7 @@ export default function ConnectDevice() {
 
   const copyToClipboard = (text: string) => {
     Clipboard.setString(text);
-    // Add a toast notification logic here if desired
+   
   };
 
   return (

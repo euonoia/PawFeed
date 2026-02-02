@@ -3,16 +3,17 @@ import {
   View,
   Text,
   TouchableOpacity,
-  SafeAreaView,
   ActivityIndicator,
   Alert,
   StyleSheet,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { rtdb, auth } from "@/config/firebase";
 import { ref, get, set } from "firebase/database";
 import { useTheme } from "@/theme/useTheme";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function SetupDevice() {
   const router = useRouter();
@@ -22,13 +23,13 @@ export default function SetupDevice() {
   const deviceId = "feeder_001";
 
   const handleClaimAndFinish = async () => {
+    if (!auth.currentUser) {
+      Alert.alert("Error", "You must be logged in to claim the device.");
+      return;
+    }
+
     setLoading(true);
     try {
-      if (!auth.currentUser) {
-        Alert.alert("Error", "You must be logged in to claim the device.");
-        return;
-      }
-
       const ownerRef = ref(rtdb, `devices/${deviceId}/owner`);
       const snapshot = await get(ownerRef);
 
@@ -40,10 +41,15 @@ export default function SetupDevice() {
           return;
         }
       } else {
+     
         await set(ownerRef, auth.currentUser.uid);
         Alert.alert("Success", "Device successfully claimed!");
       }
 
+   
+      await AsyncStorage.setItem("onboardingCompleted", "true");
+
+    
       router.replace("/main/dashboard");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
@@ -55,17 +61,19 @@ export default function SetupDevice() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.surface }]}>
-      {/* Final Progress State */}
+      {/* Progress bar */}
       <View style={styles.progressTrack}>
         <View style={[styles.progressFill, { backgroundColor: theme.primary, width: "100%" }]} />
       </View>
 
       <View style={styles.content}>
+        {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.stepText, { color: theme.primary }]}>FINAL STEP</Text>
           <Text style={[styles.title, { color: theme.text }]}>Setup Device</Text>
         </View>
 
+        {/* Main illustration */}
         <View style={styles.mainIllustration}>
           <View style={[styles.iconCircle, { backgroundColor: theme.primary + '10' }]}>
             <Ionicons name="link" size={50} color={theme.primary} />
@@ -77,7 +85,7 @@ export default function SetupDevice() {
           </Text>
         </View>
 
-        {/* Device ID Card */}
+        {/* Device ID card */}
         <View style={[styles.idCard, { backgroundColor: theme.background }]}>
           <View>
             <Text style={[styles.label, { color: theme.muted }]}>IDENTIFIED DEVICE</Text>
@@ -87,6 +95,7 @@ export default function SetupDevice() {
         </View>
       </View>
 
+      {/* Footer */}
       <View style={styles.footer}>
         <TouchableOpacity
           activeOpacity={0.8}
