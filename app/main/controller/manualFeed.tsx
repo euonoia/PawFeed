@@ -51,6 +51,13 @@ export default function ManualFeed() {
 
           <View style={styles.controlsContainer}>
             <FeedButton
+              title="Close"
+              onPress={() => handleFeed(DEVICE_CONFIG.PORTIONS.CLOSE)}
+              isLoading={loading}
+            />
+              <View style={[styles.divider, { backgroundColor: theme.muted + '15' }]} />
+
+            <FeedButton
               title="Small Portion"
               onPress={() => handleFeed(DEVICE_CONFIG.PORTIONS.SMALL)}
               isLoading={loading}

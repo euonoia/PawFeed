@@ -2,8 +2,9 @@ export const DEVICE_CONFIG = {
   ID: "feeder_001",
   OFFLINE_THRESHOLD_SEC: 20,
   PORTIONS: {
-    SMALL: 0,
-    LARGE: 90,
+    CLOSE: 0,
+    SMALL: 90,
+    LARGE: 180,
   },
   WEIGHT: {
     EMPTY_THRESHOLD: 0.1,
