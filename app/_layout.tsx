@@ -1,7 +1,7 @@
-import { Stack } from "expo-router";
-import { View, ActivityIndicator } from "react-native";
+import { useSession } from "@/hooks/useSession";
 import { useTheme } from "@/theme/useTheme";
-import { useSession, SessionStatus } from "@/hooks/useSession";
+import { Stack } from "expo-router";
+import { ActivityIndicator, View } from "react-native";
 
 export default function RootLayout() {
   const theme = useTheme();
@@ -9,7 +9,14 @@ export default function RootLayout() {
 
   if (status === "loading") {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.surface }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: theme.surface,
+        }}
+      >
         <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
@@ -17,16 +24,9 @@ export default function RootLayout() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-     
-      {status === "unauthenticated" && <Stack.Screen name="_auth" />}
-
-  
-      {status === "needs-setup" && <Stack.Screen name="_setup" />}
-
-      
-      {status === "ready" && <Stack.Screen name="main" />}
-
-     
+      <Stack.Screen name="_auth" />
+      <Stack.Screen name="_setup" />
+      <Stack.Screen name="main" />
       <Stack.Screen name="index" />
     </Stack>
   );
