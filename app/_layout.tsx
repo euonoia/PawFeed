@@ -1,44 +1,32 @@
 import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { View, ActivityIndicator } from "react-native";
 import { useTheme } from "@/theme/useTheme";
-import { useAuth } from "@/hooks/useAuth";
+import { useSession, SessionStatus } from "@/hooks/useSession";
 
 export default function RootLayout() {
   const theme = useTheme();
-  const { user, loading } = useAuth();
+  const { user, status } = useSession();
 
-  const isDark = theme.text === "#F8FAFC" || theme.text === "#E5E7EB";
-
-  
-  if (loading) {
+  if (status === "loading") {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: theme.surface,
-        }}
-      >
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.surface }}>
         <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
   }
 
- 
-  if (!user) {
-    return (
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="_auth" />
-      </Stack>
-    );
-  }
-
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="main" />
-      <Stack.Screen name="_setup" />
+     
+      {status === "unauthenticated" && <Stack.Screen name="_auth" />}
+
+  
+      {status === "needs-setup" && <Stack.Screen name="_setup" />}
+
+      
+      {status === "ready" && <Stack.Screen name="main" />}
+
+     
       <Stack.Screen name="index" />
     </Stack>
   );

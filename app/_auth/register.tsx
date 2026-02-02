@@ -1,31 +1,27 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth, rtdb } from "@/config/firebase";
-import { ref, get } from "firebase/database";
+import { auth, db, rtdb } from "@/config/firebase";
+import { doc, setDoc } from "firebase/firestore";
 import { useTheme } from "@/theme/useTheme";
+import { useRouter } from "expo-router";
 
 export default function Register() {
-  const router = useRouter();
   const theme = useTheme();
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // Check if user already owns a device
-  const checkExistingDevice = async (uid: string) => {
-    try {
-      const snapshot = await get(ref(rtdb, "devices/feeder_001/owner"));
-      if (snapshot.exists() && snapshot.val() === uid) {
-        router.replace("/main/dashboard"); 
-      }
-    } catch (error) {
-      console.log("Error checking existing device:", error);
-    }
-  };
 
   const handleRegister = async () => {
     if (!email || !password || !confirmPassword) {
@@ -39,9 +35,28 @@ export default function Register() {
     }
 
     setLoading(true);
+
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
-      await checkExistingDevice(userCredential.user.uid);
+    
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email.trim(),
+        password
+      );
+      const uid = userCredential.user.uid;
+
+     
+      await setDoc(doc(db, "users", uid), {
+        email: email.trim(),
+        createdAt: new Date(),
+      });
+
+      
+      await setDoc(doc(db, "users", uid, "setup", "status"), {
+        completed: false,
+      });
+
+    
       router.replace("/_setup/PowerOn");
     } catch (error: any) {
       Alert.alert("Registration Failed", error.message);
@@ -51,9 +66,15 @@ export default function Register() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, padding: 30, justifyContent: "center", backgroundColor: theme.surface }}>
-      <Text style={{ fontSize: 32, fontWeight: "800", color: theme.text }}>Create Account</Text>
-      <Text style={{ fontSize: 16, color: theme.muted, marginBottom: 20 }}>Sign up to setup your PawFeed device</Text>
+    <SafeAreaView
+      style={{ flex: 1, padding: 30, justifyContent: "center", backgroundColor: theme.surface }}
+    >
+      <Text style={{ fontSize: 32, fontWeight: "800", color: theme.text }}>
+        Create Account
+      </Text>
+      <Text style={{ fontSize: 16, color: theme.muted, marginBottom: 20 }}>
+        Sign up to setup your PawFeed device
+      </Text>
 
       <TextInput
         placeholder="Email"
@@ -85,7 +106,11 @@ export default function Register() {
         onPress={handleRegister}
         disabled={loading}
       >
-        {loading ? <ActivityIndicator color="#FFF" /> : <Text style={{ color: "#FFF", fontWeight: "700" }}>Create Account</Text>}
+        {loading ? (
+          <ActivityIndicator color="#FFF" />
+        ) : (
+          <Text style={{ color: "#FFF", fontWeight: "700" }}>Create Account</Text>
+        )}
       </TouchableOpacity>
     </SafeAreaView>
   );

@@ -1,47 +1,60 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from "react-native";
+import React, { useEffect } from "react";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert,ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "@/theme/useTheme";
 import { useDeviceStatus } from "@/hooks/useDeviceStatus";
 import WeightDisplay from "@/components/weight/WeightDisplay";
 import ConnectionBadge from "@/components/connections/ConnnectionBadge";
 import { useLogout } from "@/hooks/useLogout";
-import { auth } from "@/config/firebase";
+import { useSession } from "@/hooks/useSession";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Dashboard() {
   const theme = useTheme();
   const { status, isOnline } = useDeviceStatus();
   const router = useRouter();
   const { logout } = useLogout();
+  const { user, status: sessionStatus } = useSession();
 
+  
+  useEffect(() => {
+    if (!user) return; 
+    if (sessionStatus === "needs-setup") {
+      router.replace("/_setup/PowerOn"); 
+    }
+  }, [user, sessionStatus]);
 
+  
+  if (!user || sessionStatus === "loading") {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.surface }}>
+        <ActivityIndicator size="large" color={theme.primary} />
+      </View>
+    );
+  }
+
+  
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.surface }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        
         {/* HEADER SECTION */}
         <View style={styles.headerRow}>
           <View>
             <Text style={[styles.stepText, { color: theme.primary }]}>OVERVIEW</Text>
             <Text style={[styles.title, { color: theme.text }]}>PawFeed</Text>
           </View>
-         <TouchableOpacity 
-          onPress={logout}
-          style={[styles.iconButton, { backgroundColor: theme.background }]}
-        >
-          <Ionicons name="log-out-outline" size={22} color={theme.muted} />
-        </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={logout}
+            style={[styles.iconButton, { backgroundColor: theme.background }]}
+          >
+            <Ionicons name="log-out-outline" size={22} color={theme.muted} />
+          </TouchableOpacity>
         </View>
 
         {/* CONNECTION STATUS */}
         <View style={styles.statusSection}>
-           <ConnectionBadge
-            online={isOnline}
-            lastSeen={status?.lastSeen}
-          />
+          <ConnectionBadge online={isOnline} lastSeen={status?.lastSeen} />
         </View>
 
         {/* WEIGHT CARD */}
@@ -60,8 +73,8 @@ export default function Dashboard() {
           <View style={[styles.divider, { backgroundColor: theme.muted + '20' }]} />
           
           <TouchableOpacity style={styles.cardAction}>
-             <Text style={[styles.actionText, { color: theme.primary }]}>View History</Text>
-             <Ionicons name="chevron-forward" size={16} color={theme.primary} />
+            <Text style={[styles.actionText, { color: theme.primary }]}>View History</Text>
+            <Ionicons name="chevron-forward" size={16} color={theme.primary} />
           </TouchableOpacity>
         </View>
 

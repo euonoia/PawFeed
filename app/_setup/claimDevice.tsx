@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,48 +8,73 @@ import {
   StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { rtdb, auth } from "@/config/firebase";
+import { auth, rtdb, db } from "@/config/firebase";
 import { ref, get, set } from "firebase/database";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { useTheme } from "@/theme/useTheme";
-import { Ionicons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 
 export default function SetupDevice() {
-  const router = useRouter();
   const theme = useTheme();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   const deviceId = "feeder_001";
 
-  const handleClaimAndFinish = async () => {
+  // ✅ Auto-redirect if setup already completed
+  useEffect(() => {
+    const checkSetupStatus = async () => {
+      if (!auth.currentUser) return;
+      try {
+        const setupSnap = await getDoc(
+          doc(db, "users", auth.currentUser.uid, "setup", "status")
+        );
+        if (setupSnap.exists() && setupSnap.data()?.completed) {
+          router.replace("/main/dashboard");
+        }
+      } catch (err) {
+        console.log("Error checking setup status:", err);
+      } finally {
+        setChecking(false);
+      }
+    };
+
+    checkSetupStatus();
+  }, []);
+
+  const handleClaimDevice = async () => {
     if (!auth.currentUser) {
       Alert.alert("Error", "You must be logged in to claim the device.");
       return;
     }
 
     setLoading(true);
+
     try {
+    
       const ownerRef = ref(rtdb, `devices/${deviceId}/owner`);
       const snapshot = await get(ownerRef);
 
-      if (snapshot.exists()) {
-        if (snapshot.val() === auth.currentUser.uid) {
-          Alert.alert("Info", "Device already claimed by you.");
-        } else {
-          Alert.alert("Error", "Device is already claimed by another user.");
-          return;
-        }
-      } else {
-     
-        await set(ownerRef, auth.currentUser.uid);
-        Alert.alert("Success", "Device successfully claimed!");
+      if (snapshot.exists() && snapshot.val() !== auth.currentUser.uid) {
+        Alert.alert("Error", "Device already claimed by another user.");
+        setLoading(false);
+        return;
       }
 
-   
-      await AsyncStorage.setItem("onboardingCompleted", "true");
+     
+      await set(ownerRef, auth.currentUser.uid);
 
-    
+      
+      await setDoc(
+        doc(db, "users", auth.currentUser.uid, "setup", "status"),
+        { completed: true },
+        { merge: true }
+      );
+
+      Alert.alert("Success", "Device claimed! Setup completed.");
+
+      
       router.replace("/main/dashboard");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
@@ -59,62 +84,39 @@ export default function SetupDevice() {
     }
   };
 
+  if (checking) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: theme.surface,
+        }}
+      >
+        <ActivityIndicator size="large" color={theme.primary} />
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.surface }]}>
-      {/* Progress bar */}
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { backgroundColor: theme.primary, width: "100%" }]} />
-      </View>
-
       <View style={styles.content}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={[styles.stepText, { color: theme.primary }]}>FINAL STEP</Text>
-          <Text style={[styles.title, { color: theme.text }]}>Setup Device</Text>
-        </View>
+        <Text style={[styles.title, { color: theme.text }]}>Claim Your Device</Text>
+        <Text style={[styles.subtitle, { color: theme.muted }]}>
+          Only you can manage your PawFeed device.
+        </Text>
 
-        {/* Main illustration */}
-        <View style={styles.mainIllustration}>
-          <View style={[styles.iconCircle, { backgroundColor: theme.primary + '10' }]}>
-            <Ionicons name="link" size={50} color={theme.primary} />
-          </View>
-          <Text style={[styles.subtitle, { color: theme.text }]}>Claim Your Device</Text>
-          <Text style={[styles.description, { color: theme.muted }]}>
-            We're ready to link <Text style={styles.boldText}>PawFeed</Text> to your account. 
-            This ensures only you can manage your pet's schedule.
-          </Text>
-        </View>
-
-        {/* Device ID card */}
-        <View style={[styles.idCard, { backgroundColor: theme.background }]}>
-          <View>
-            <Text style={[styles.label, { color: theme.muted }]}>IDENTIFIED DEVICE</Text>
-            <Text style={[styles.deviceIdText, { color: theme.text }]}>{deviceId}</Text>
-          </View>
-          <Ionicons name="hardware-chip-outline" size={24} color={theme.primary} />
-        </View>
-      </View>
-
-      {/* Footer */}
-      <View style={styles.footer}>
         <TouchableOpacity
-          activeOpacity={0.8}
-          style={[styles.primaryButton, { backgroundColor: theme.primary, opacity: loading ? 0.7 : 1 }]}
-          onPress={handleClaimAndFinish}
+          style={[styles.button, { backgroundColor: theme.primary, opacity: loading ? 0.7 : 1 }]}
+          onPress={handleClaimDevice}
           disabled={loading}
         >
           {loading ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <View style={styles.buttonRow}>
-              <Text style={styles.buttonText}>Claim & Finish Setup</Text>
-              <Ionicons name="checkmark-circle" size={20} color="#FFF" />
-            </View>
+            <Text style={styles.buttonText}>Claim & Finish Setup</Text>
           )}
-        </TouchableOpacity>
-        
-        <TouchableOpacity onPress={() => router.back()} disabled={loading} style={styles.backButton}>
-          <Text style={[styles.backText, { color: theme.muted }]}>Go Back</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -122,25 +124,10 @@ export default function SetupDevice() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  progressTrack: { height: 6, width: "100%", backgroundColor: "#F0F0F0" },
-  progressFill: { height: "100%", borderTopRightRadius: 10, borderBottomRightRadius: 10 },
-  content: { flex: 1, paddingHorizontal: 24, paddingTop: 40 },
-  header: { marginBottom: 32 },
-  stepText: { fontSize: 12, fontWeight: "800", letterSpacing: 1.5, textTransform: "uppercase" },
-  title: { fontSize: 32, fontWeight: "900", marginTop: 4 },
-  mainIllustration: { alignItems: "center", marginBottom: 40 },
-  iconCircle: { width: 100, height: 100, borderRadius: 50, justifyContent: "center", alignItems: "center", marginBottom: 20 },
-  subtitle: { fontSize: 22, fontWeight: "800", marginBottom: 12 },
-  description: { fontSize: 16, textAlign: "center", lineHeight: 24, paddingHorizontal: 15 },
-  boldText: { fontWeight: "800", color: "#000" },
-  idCard: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", padding: 20, borderRadius: 20, borderWidth: 1, borderColor: "rgba(0,0,0,0.05)" },
-  label: { fontSize: 10, fontWeight: "800", letterSpacing: 1, marginBottom: 4 },
-  deviceIdText: { fontSize: 18, fontWeight: "700" },
-  footer: { padding: 24, gap: 12 },
-  primaryButton: { paddingVertical: 18, borderRadius: 18, alignItems: "center", justifyContent: "center" },
-  buttonRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  buttonText: { color: "#FFF", fontSize: 18, fontWeight: "700" },
-  backButton: { paddingVertical: 12 },
-  backText: { textAlign: "center", fontSize: 16, fontWeight: "600" },
+  container: { flex: 1, justifyContent: "center", alignItems: "center" },
+  content: { width: "80%", alignItems: "center" },
+  title: { fontSize: 28, fontWeight: "800", marginBottom: 10 },
+  subtitle: { fontSize: 16, textAlign: "center", marginBottom: 20 },
+  button: { padding: 16, borderRadius: 16, alignItems: "center", width: "100%" },
+  buttonText: { color: "#FFF", fontWeight: "700", fontSize: 16 },
 });

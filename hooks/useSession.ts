@@ -3,7 +3,11 @@ import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/config/firebase";
 
-type SessionStatus = "loading" | "unauthenticated" | "needs-setup" | "ready";
+export type SessionStatus = 
+  | "loading" 
+  | "unauthenticated" 
+  | "needs-setup" 
+  | "ready";
 
 export function useSession() {
   const [user, setUser] = useState<User | null>(null);
@@ -24,13 +28,12 @@ export function useSession() {
           doc(db, "users", firebaseUser.uid, "setup", "status")
         );
 
-        if (setupSnap.exists() && setupSnap.data().completed === true) {
+        if (setupSnap.exists() && setupSnap.data().completed) {
           setStatus("ready");
         } else {
           setStatus("needs-setup");
         }
       } catch {
-
         setStatus("needs-setup");
       }
     });
