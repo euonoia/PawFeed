@@ -1,16 +1,34 @@
 import { Drawer } from "expo-router/drawer";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/theme/useTheme";
-import { useAuth } from "@/hooks/useAuth";
+import { useSession, SessionStatus } from "@/hooks/useSession";
 import { Redirect } from "expo-router";
+import { View, ActivityIndicator } from "react-native";
 
 export default function ControllerLayout() {
   const theme = useTheme();
-  const { user, loading } = useAuth();
+  const { user, status } = useSession();
 
-  if (loading) return null; 
-  if (!user) return <Redirect href="/_auth/login" />;
+ 
+  if (status === "loading") {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: theme.surface }}>
+        <ActivityIndicator size="large" color={theme.primary} />
+      </View>
+    );
+  }
 
+  
+  if (status === "unauthenticated") {
+    return <Redirect href="/_auth/login" />;
+  }
+
+
+  if (status === "needs-setup") {
+    return <Redirect href="/_setup/PowerOn" />;
+  }
+
+  
   return (
     <Drawer
       screenOptions={{
