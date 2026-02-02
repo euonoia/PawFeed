@@ -25,37 +25,41 @@ export default function Index() {
   const [checking, setChecking] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  useEffect(() => {
-    const decideRoute = async () => {
-      if (loading) return;
+ useEffect(() => {
+  const decideRoute = async () => {
+    if (loading) return;
 
-      if (!user) {
-        // New or not logged-in → show onboarding
-        setShowOnboarding(true);
-        setChecking(false);
-        return;
+   
+    if (!user) {
+      setShowOnboarding(true);
+      setChecking(false);
+      return;
+    }
+
+    try {
+      
+      const setupDoc = await getDoc(
+        doc(db, "users", user.uid, "setup", "status")
+      );
+
+      if (setupDoc.exists() && setupDoc.data().completed) {
+       
+        router.replace("/main/dashboard");
+      } else {
+        
+        router.replace("/_auth/login");
       }
+    } catch (error) {
+      console.error("Routing error:", error);
+      router.replace("/_auth/login");
+    } finally {
+      setChecking(false);
+    }
+  };
 
-      try {
-        const setupDoc = await getDoc(doc(db, "users", user.uid, "setup", "status"));
-        if (setupDoc.exists() && setupDoc.data().completed) {
-          // Existing user → dashboard
-          router.replace("/main/dashboard");
-        } else {
-          // New user → show onboarding
-          setShowOnboarding(true);
-        }
-      } catch (err) {
-        console.error("Routing error:", err);
-        // On error, show onboarding anyway
-        setShowOnboarding(true);
-      } finally {
-        setChecking(false);
-      }
-    };
+  decideRoute();
+}, [user, loading]);
 
-    decideRoute();
-  }, [user, loading]);
 
   const handleGetStarted = () => {
     router.push("/_auth/register");
@@ -77,7 +81,7 @@ export default function Index() {
   }
 
   if (!showOnboarding) {
-    return null; // Should never show; safety fallback
+    return null;
   }
 
   return (

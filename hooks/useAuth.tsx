@@ -12,7 +12,7 @@ export function useAuth() {
       setLoading(false);
     });
 
-    // Cleanup subscription on unmount
+   
     return unsubscribe;
   }, []);
 
