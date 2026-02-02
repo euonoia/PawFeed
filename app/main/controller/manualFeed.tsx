@@ -5,7 +5,6 @@ import { DEVICE_CONFIG } from "../../../config/deviceConfig";
 import { rtdb } from "@/config/firebase";
 import { ref, set } from "firebase/database";
 import { Ionicons } from "@expo/vector-icons";
-
 import FeedButton from "../../../components/FeedButton";
 
 export default function ManualFeed() {

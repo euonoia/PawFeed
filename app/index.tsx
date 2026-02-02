@@ -11,8 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/theme/useTheme";
-import { useAuth } from "@/hooks/useAuth";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useSession, SessionStatus } from "@/hooks/useSession";
 
 const { height } = Dimensions.get("window");
 const isSmallScreen = height < 700;
@@ -20,46 +19,37 @@ const isSmallScreen = height < 700;
 export default function Index() {
   const router = useRouter();
   const theme = useTheme();
-  const { user, loading } = useAuth();
-
+  const { user, status } = useSession();
   const [checking, setChecking] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
-    const checkSession = async () => {
-      if (loading) return;
+    if (status === "loading") return;
 
-      try {
-      
-        if (!user) {
-          setShowOnboarding(true);
-          setChecking(false);
-          return;
-        }
+    if (status === "unauthenticated") {
+      setShowOnboarding(true);
+      setChecking(false);
+      return;
+    }
 
-        const onboardingCompleted = await AsyncStorage.getItem("onboardingCompleted");
-        if (onboardingCompleted === "true") {
-          router.replace("/main/dashboard");
-          return;
-        }
+    if (status === "needs-setup") {
+      router.replace("/_setup/PowerOn");
+      return;
+    }
 
-        setShowOnboarding(true);
-      } catch (err) {
-        console.error("Session check error:", err);
-        setShowOnboarding(true);
-      } finally {
-        setChecking(false);
-      }
-    };
+    if (status === "ready") {
+      router.replace("/main/dashboard");
+      return;
+    }
 
-    checkSession();
-  }, [user, loading]);
+    setChecking(false);
+  }, [status]);
 
   const handleGetStarted = () => {
     router.push("/_auth/register");
   };
 
-  if (loading || checking) {
+  if (status === "loading" || checking) {
     return (
       <View
         style={{
@@ -76,6 +66,7 @@ export default function Index() {
 
   if (!showOnboarding) return null;
 
+  // --- Original UI content remains unchanged ---
   return (
     <View style={[styles.container, { backgroundColor: theme.surface }]}>
       <View style={[styles.diagonalBackground, { backgroundColor: theme.background }]} />
@@ -184,7 +175,7 @@ const styles = StyleSheet.create({
   description: { fontSize: 16, textAlign: "center", lineHeight: 24, paddingHorizontal: 10 },
   footer: { paddingHorizontal: 30, paddingBottom: isSmallScreen ? 30 : 50 },
   button: { paddingVertical: 18, borderRadius: 18, alignItems: "center", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.25, shadowRadius: 15, elevation: 8 },
-  buttonText: { color: "#FFFFFF", fontSize: 18, fontWeight: "800" },
+  buttonText: { color: "#FFF", fontSize: 18, fontWeight: "800" },
   supportButton: { marginTop: 20, paddingVertical: 10 },
   helpText: { textAlign: "center", fontSize: 14, fontWeight: "600", textDecorationLine: "underline" },
 });
