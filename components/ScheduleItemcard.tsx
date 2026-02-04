@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { canDispenseFood } from "../services/FeedGuardService";
 import { useTheme } from "../theme/useTheme";
 import { Ionicons } from "@expo/vector-icons";
+import { dispensePortion } from "../services/ServoHelper"; 
 
 type Props = {
   id: string;
@@ -60,12 +61,25 @@ export default function ScheduleItemCard({ id, time, angle, active, onSave }: Pr
   const handleTimeChange = async (_: any, date?: Date) => {
     setPickerOpen(false);
     if (!date) return;
-    // ... existing logic ...
     const hh = date.getHours().toString().padStart(2, "0");
     const mm = date.getMinutes().toString().padStart(2, "0");
     const formatted = `${hh}:${mm}`;
     setCurrentTime(formatted);
     save({ time: formatted });
+  };
+
+  const handlePortionPress = async (portionAngle: number) => {
+    const allowed = await canDispenseFood();
+    if (!allowed) {
+      Alert.alert("Feeding Blocked", "Cannot dispense while food is still in the bowl.");
+      return;
+    }
+
+    setCurrentAngle(portionAngle);
+    save({ angle: portionAngle });
+
+    // Move servo and automatically return to CLOSE
+    await dispensePortion(portionAngle);
   };
 
   return (
@@ -100,10 +114,7 @@ export default function ScheduleItemCard({ id, time, angle, active, onSave }: Pr
           ].map((portion) => (
             <Pressable
               key={portion.label}
-              onPress={() => {
-                setCurrentAngle(portion.val);
-                save({ angle: portion.val });
-              }}
+              onPress={() => handlePortionPress(portion.val)}
               style={[
                 styles.portionBtn,
                 { backgroundColor: theme.surface },
