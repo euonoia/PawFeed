@@ -10,7 +10,9 @@
     "android:prod": "cross-env APP_ENV=production expo run:android",
     "ios": "cross-env APP_ENV=development expo run:ios",
     "ios:prod": "cross-env APP_ENV=production expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build:dev": "APP_ENV=development eas build --platform android --profile development",
+    "build:prod": "APP_ENV=production eas build --platform android --profile production"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

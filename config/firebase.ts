@@ -18,7 +18,6 @@ interface AppExtra {
 
 const extra = (Constants.expoConfig?.extra || {}) as AppExtra;
 
-
 const firebaseConfig = {
   apiKey: extra.EXPO_PUBLIC_FIREBASE_API_KEY,
   authDomain: extra.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -29,17 +28,11 @@ const firebaseConfig = {
   appId: extra.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
-
 export const firebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
-export const auth =
-  getApps().length > 0
-    ? initializeAuth(firebaseApp, {
-        persistence: getReactNativePersistence(AsyncStorage),
-      })
-    : initializeAuth(firebaseApp, {
-        persistence: getReactNativePersistence(AsyncStorage),
-      });
+export const auth = initializeAuth(firebaseApp, {
+  persistence: getReactNativePersistence(AsyncStorage),
+});
 
 export const db = getFirestore(firebaseApp);
 export const rtdb = getDatabase(firebaseApp);
