@@ -7,21 +7,41 @@ import { ref, set } from "firebase/database";
 import { Ionicons } from "@expo/vector-icons";
 import FeedButton from "../../../components/FeedButton";
 
+const LOCAL_IP = "http://192.168.4.1";
+
 export default function ManualFeed() {
   const theme = useTheme();
   const [loading, setLoading] = useState(false);
 
-  const handleFeed = async (angle: number) => {
+  const handleFeed = async (angle: number, grams: number = 0) => {
     setLoading(true);
+    
+    // 1. TRY LOCAL IP FIRST (Fastest)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1500); 
+
     try {
-      const targetRef = ref(
-        rtdb,
-        DEVICE_CONFIG.PATHS.SERVO_TARGET(DEVICE_CONFIG.ID)
-      );
+      // Local API expects /api/feed?grams=X&angle=Y
+      const response = await fetch(`${LOCAL_IP}/api/feed?grams=${grams}&angle=${angle}`, {
+        signal: controller.signal
+      });
+      
+      if (response.ok) {
+        setLoading(false);
+        return; // Success locally
+      }
+    } catch (err) {
+      console.log("Local unreachable, trying Cloud...");
+    } finally {
+      clearTimeout(timeoutId);
+    }
+
+    // 2. FALLBACK TO FIREBASE (Remote)
+    try {
+      const targetRef = ref(rtdb, DEVICE_CONFIG.PATHS.SERVO_TARGET(DEVICE_CONFIG.ID));
       await set(targetRef, angle);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to dispense food.";
-      Alert.alert("Error", message);
+      Alert.alert("Error", "Could not connect to feeder.");
     } finally {
       setLoading(false);
     }
@@ -31,53 +51,53 @@ export default function ManualFeed() {
     <View style={[styles.container, { backgroundColor: theme.surface }]}>
       <ScrollView contentContainerStyle={styles.content}>
         
-        {/* Header Section - Refined for Drawer Layout */}
         <View style={styles.header}>
-          <Text style={[styles.stepText, { color: theme.primary }]}>ACTION CENTER</Text>
-          {/* Large title removed as it's now in the Top Nav Bar */}
+          <Text style={[styles.stepText, { color: theme.primary }]}>MANUAL CONTROL</Text>
           <Text style={[styles.description, { color: theme.muted }]}>
-            Select a portion size below to dispense food to your pet immediately.
+            Directly control the feeder gate. Local connection is prioritized for instant response.
           </Text>
         </View>
 
-        {/* Portion Selection Card */}
         <View style={[styles.card, { backgroundColor: theme.background }]}>
           <View style={styles.cardHeader}>
              <View style={[styles.iconCircle, { backgroundColor: theme.primary + '15' }]}>
-                <Ionicons name="fast-food-outline" size={18} color={theme.primary} />
+                <Ionicons name="options-outline" size={18} color={theme.primary} />
              </View>
-             <Text style={[styles.label, { color: theme.muted }]}>SELECT PORTION</Text>
+             <Text style={[styles.label, { color: theme.muted }]}>GATE POSITION</Text>
           </View>
 
           <View style={styles.controlsContainer}>
+            {/* CLOSE POSITION */}
             <FeedButton
-              title="Close"
-              onPress={() => handleFeed(DEVICE_CONFIG.PORTIONS.CLOSE)}
+              title="Close Gate (0°)"
+              onPress={() => handleFeed(0, 0)}
               isLoading={loading}
             />
-              <View style={[styles.divider, { backgroundColor: theme.muted + '15' }]} />
+            
+            <View style={[styles.divider, { backgroundColor: theme.muted + '15' }]} />
 
+            {/* HALF POSITION */}
             <FeedButton
-              title="Small Portion"
-              onPress={() => handleFeed(DEVICE_CONFIG.PORTIONS.SMALL)}
+              title="Half Open (90°)"
+              onPress={() => handleFeed(90, 50)} // Default 50g for manual triggers
               isLoading={loading}
             />
 
             <View style={[styles.divider, { backgroundColor: theme.muted + '15' }]} />
 
+            {/* FULL POSITION */}
             <FeedButton
-              title="Large Portion"
-              onPress={() => handleFeed(DEVICE_CONFIG.PORTIONS.LARGE)}
+              title="Full Open (180°)"
+              onPress={() => handleFeed(180, 100)} // Default 100g for full open
               isLoading={loading}
             />
           </View>
         </View>
 
-        {/* Safety Note */}
         <View style={styles.infoBox}>
-          <Ionicons name="alert-circle-outline" size={20} color={theme.muted} />
+          <Ionicons name="shield-checkmark-outline" size={20} color={theme.primary} />
           <Text style={[styles.infoText, { color: theme.muted }]}>
-            Dispensing multiple portions in a short time may cause overfeeding.
+            Hybrid mode active: Device will tare and weigh before dispensing.
           </Text>
         </View>
       </ScrollView>
@@ -86,75 +106,17 @@ export default function ManualFeed() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: 24,
-    paddingTop: 32, // Reduced padding since the Header is now present
-    paddingBottom: 40,
-  },
-  header: {
-    marginBottom: 24,
-  },
-  stepText: {
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 1.5,
-    textTransform: "uppercase",
-    marginBottom: 8,
-  },
-  description: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  card: {
-    borderRadius: 24,
-    padding: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    marginBottom: 20,
-  },
-  iconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-  },
-  controlsContainer: {
-    width: "100%",
-    gap: 12,
-  },
-  divider: {
-    height: 1,
-    marginVertical: 10,
-  },
-  infoBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 30,
-    paddingHorizontal: 8,
-    gap: 12,
-  },
-  infoText: {
-    flex: 1,
-    fontSize: 14,
-    lineHeight: 20,
-  },
+  container: { flex: 1 },
+  content: { paddingHorizontal: 24, paddingTop: 32, paddingBottom: 40 },
+  header: { marginBottom: 24 },
+  stepText: { fontSize: 12, fontWeight: "800", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 },
+  description: { fontSize: 15, lineHeight: 22 },
+  card: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(0,0,0,0.05)', elevation: 3 },
+  cardHeader: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 20 },
+  iconCircle: { width: 32, height: 32, borderRadius: 16, justifyContent: "center", alignItems: "center" },
+  label: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5 },
+  controlsContainer: { width: "100%", gap: 12 },
+  divider: { height: 1, marginVertical: 10 },
+  infoBox: { flexDirection: "row", alignItems: "center", marginTop: 30, paddingHorizontal: 8, gap: 12 },
+  infoText: { flex: 1, fontSize: 14, lineHeight: 20 },
 });
