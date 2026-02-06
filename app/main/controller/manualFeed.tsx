@@ -1,103 +1,208 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, Alert, ScrollView } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import { useTheme } from "../../../theme/useTheme";
 import { DEVICE_CONFIG } from "../../../config/deviceConfig";
 import { rtdb } from "@/config/firebase";
-import { ref, set } from "firebase/database";
+import { ref, set, onValue } from "firebase/database";
 import { Ionicons } from "@expo/vector-icons";
-import FeedButton from "../../../components/FeedButton";
 
 const LOCAL_IP = "http://192.168.4.1";
 
 export default function ManualFeed() {
   const theme = useTheme();
   const [loading, setLoading] = useState(false);
+  const [connectionMode, setConnectionMode] =
+    useState<"Checking" | "Local" | "Cloud">("Checking");
+  const [currentAngle, setCurrentAngle] = useState(0);
 
-  const handleFeed = async (angle: number, grams: number = 0) => {
-    setLoading(true);
-    
-    // 1. TRY LOCAL IP FIRST (Fastest)
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1500); 
-
-    try {
-      // Local API expects /api/feed?grams=X&angle=Y
-      const response = await fetch(`${LOCAL_IP}/api/feed?grams=${grams}&angle=${angle}`, {
-        signal: controller.signal
-      });
-      
-      if (response.ok) {
-        setLoading(false);
-        return; // Success locally
+  // Sync applied servo angle
+  useEffect(() => {
+    const angleRef = ref(
+      rtdb,
+      `/devices/${DEVICE_CONFIG.ID}/servo/appliedAngle`
+    );
+    return onValue(angleRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setCurrentAngle(snapshot.val());
       }
-    } catch (err) {
-      console.log("Local unreachable, trying Cloud...");
+    });
+  }, []);
+
+  const handleGate = async (angle: 0 | 90) => {
+    setLoading(true);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1200);
+
+    // 1️⃣ Try LOCAL control first
+    try {
+      const res = await fetch(`${LOCAL_IP}/servo?pos=${angle}`, {
+        signal: controller.signal,
+      });
+      if (res.ok) {
+        setConnectionMode("Local");
+        setLoading(false);
+        return;
+      }
+    } catch {
+      setConnectionMode("Cloud");
     } finally {
       clearTimeout(timeoutId);
     }
 
-    // 2. FALLBACK TO FIREBASE (Remote)
+    // 2️⃣ Fallback to Firebase
     try {
-      const targetRef = ref(rtdb, DEVICE_CONFIG.PATHS.SERVO_TARGET(DEVICE_CONFIG.ID));
+      const targetRef = ref(
+        rtdb,
+        `/devices/${DEVICE_CONFIG.ID}/servo/targetAngle`
+      );
       await set(targetRef, angle);
-    } catch (err: unknown) {
-      Alert.alert("Error", "Could not connect to feeder.");
+    } catch {
+      Alert.alert("Offline", "Feeder is unreachable.");
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <View style={[styles.container, { backgroundColor: theme.surface }]}>
-      <ScrollView contentContainerStyle={styles.content}>
-        
-        <View style={styles.header}>
-          <Text style={[styles.stepText, { color: theme.primary }]}>MANUAL CONTROL</Text>
-          <Text style={[styles.description, { color: theme.muted }]}>
-            Directly control the feeder gate. Local connection is prioritized for instant response.
+  const GateOption = ({
+    title,
+    angle,
+    icon,
+  }: {
+    title: string;
+    angle: 0 | 90;
+    icon: string;
+  }) => {
+    const isActive = currentAngle === angle;
+
+    return (
+      <TouchableOpacity
+        style={[
+          styles.gateCard,
+          {
+            backgroundColor: theme.background,
+            borderColor: isActive ? theme.primary : "transparent",
+          },
+        ]}
+        onPress={() => handleGate(angle)}
+        disabled={loading}
+      >
+        <View
+          style={[
+            styles.iconBox,
+            { backgroundColor: isActive ? theme.primary : theme.surface },
+          ]}
+        >
+          <Ionicons
+            name={icon as any}
+            size={24}
+            color={isActive ? "#FFF" : theme.primary}
+          />
+        </View>
+
+        <View style={styles.gateInfo}>
+          <Text style={[styles.gateTitle, { color: theme.text }]}>
+            {title}
+          </Text>
+          <Text style={[styles.gateSub, { color: theme.muted }]}>
+            {angle === 0 ? "Gate locked" : "Gate open"}
           </Text>
         </View>
 
-        <View style={[styles.card, { backgroundColor: theme.background }]}>
-          <View style={styles.cardHeader}>
-             <View style={[styles.iconCircle, { backgroundColor: theme.primary + '15' }]}>
-                <Ionicons name="options-outline" size={18} color={theme.primary} />
-             </View>
-             <Text style={[styles.label, { color: theme.muted }]}>GATE POSITION</Text>
+        {loading && isActive ? (
+          <ActivityIndicator color={theme.primary} />
+        ) : (
+          <Ionicons name="chevron-forward" size={18} color={theme.muted} />
+        )}
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <View style={[styles.container, { backgroundColor: theme.surface }]}>
+      <ScrollView contentContainerStyle={styles.content}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.row}>
+            <Text style={[styles.stepText, { color: theme.primary }]}>
+              Manual Gate Control
+            </Text>
+
+            <View
+              style={[
+                styles.badge,
+                {
+                  backgroundColor:
+                    connectionMode === "Local"
+                      ? "#34C75920"
+                      : "#FF950020",
+                },
+              ]}
+            >
+              <View
+                style={[
+                  styles.dot,
+                  {
+                    backgroundColor:
+                      connectionMode === "Local"
+                        ? "#34C759"
+                        : "#FF9500",
+                  },
+                ]}
+              />
+              <Text
+                style={[
+                  styles.badgeText,
+                  {
+                    color:
+                      connectionMode === "Local"
+                        ? "#34C759"
+                        : "#FF9500",
+                  },
+                ]}
+              >
+                {connectionMode}
+              </Text>
+            </View>
           </View>
 
-          <View style={styles.controlsContainer}>
-            {/* CLOSE POSITION */}
-            <FeedButton
-              title="Close Gate (0°)"
-              onPress={() => handleFeed(0, 0)}
-              isLoading={loading}
-            />
-            
-            <View style={[styles.divider, { backgroundColor: theme.muted + '15' }]} />
-
-            {/* HALF POSITION */}
-            <FeedButton
-              title="Half Open (90°)"
-              onPress={() => handleFeed(90, 50)} // Default 50g for manual triggers
-              isLoading={loading}
-            />
-
-            <View style={[styles.divider, { backgroundColor: theme.muted + '15' }]} />
-
-            {/* FULL POSITION */}
-            <FeedButton
-              title="Full Open (180°)"
-              onPress={() => handleFeed(180, 100)} // Default 100g for full open
-              isLoading={loading}
-            />
-          </View>
+          <Text style={[styles.description, { color: theme.muted }]}>
+            Directly open or close the feeding gate. This action overrides
+            scheduled feeds.
+          </Text>
         </View>
 
-        <View style={styles.infoBox}>
-          <Ionicons name="shield-checkmark-outline" size={20} color={theme.primary} />
+        {/* Options */}
+        <View style={styles.optionsContainer}>
+          <GateOption
+            title="Close Gate"
+            angle={0}
+            icon="lock-closed-outline"
+          />
+          <GateOption
+            title="Open Gate"
+            angle={90}
+            icon="lock-open-outline"
+          />
+        </View>
+
+        {/* Info */}
+        <View style={[styles.warningBox, { backgroundColor: theme.primary + "08" }]}>
+          <Ionicons
+            name="information-circle-outline"
+            size={20}
+            color={theme.primary}
+          />
           <Text style={[styles.infoText, { color: theme.muted }]}>
-            Hybrid mode active: Device will tare and weigh before dispensing.
+            Manual control lets you control the feeding gate and your desired grams
           </Text>
         </View>
       </ScrollView>
@@ -107,16 +212,20 @@ export default function ManualFeed() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { paddingHorizontal: 24, paddingTop: 32, paddingBottom: 40 },
-  header: { marginBottom: 24 },
-  stepText: { fontSize: 12, fontWeight: "800", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 8 },
+  content: { padding: 24 },
+  header: { marginBottom: 32 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  stepText: { fontSize: 13, fontWeight: "800", letterSpacing: 1, textTransform: "uppercase" },
   description: { fontSize: 15, lineHeight: 22 },
-  card: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(0,0,0,0.05)', elevation: 3 },
-  cardHeader: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 20 },
-  iconCircle: { width: 32, height: 32, borderRadius: 16, justifyContent: "center", alignItems: "center" },
-  label: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5 },
-  controlsContainer: { width: "100%", gap: 12 },
-  divider: { height: 1, marginVertical: 10 },
-  infoBox: { flexDirection: "row", alignItems: "center", marginTop: 30, paddingHorizontal: 8, gap: 12 },
-  infoText: { flex: 1, fontSize: 14, lineHeight: 20 },
+  badge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, gap: 6 },
+  dot: { width: 6, height: 6, borderRadius: 3 },
+  badgeText: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
+  optionsContainer: { gap: 16 },
+  gateCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 18, borderWidth: 2, gap: 16 },
+  iconBox: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
+  gateInfo: { flex: 1 },
+  gateTitle: { fontSize: 16, fontWeight: '700', marginBottom: 2 },
+  gateSub: { fontSize: 13 },
+  warningBox: { flexDirection: "row", marginTop: 40, padding: 16, borderRadius: 16, gap: 12, alignItems: 'center' },
+  infoText: { flex: 1, fontSize: 13, lineHeight: 18 },
 });
