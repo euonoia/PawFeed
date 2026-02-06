@@ -11,6 +11,7 @@ export type ScheduleItem = {
   time: string;
   angle: number;
   active: boolean;
+  grams: number;
   lastRun?: string;
 };
 

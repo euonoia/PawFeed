@@ -76,12 +76,14 @@ export default function ScheduleScreen() {
         <Text style={[styles.sectionLabel, { color: theme.muted }]}>DAILY ROUTINE</Text>
 
         {/* Schedule Items */}
-        <View style={styles.itemsList}>
+       <View style={styles.itemsList}>
           {["morning", "evening"].map((id) => {
-            const item = items[id] ?? {
+            // If item doesn't exist, we provide safe defaults
+            const item = items[id] || {
               time: "07:00",
-              angle: 45,
+              angle: 90,
               active: false,
+              grams: 0,
             };
 
             return (
@@ -91,12 +93,12 @@ export default function ScheduleScreen() {
                 time={item.time}
                 angle={item.angle}
                 active={item.active}
+                grams={item.grams || 0} // Matches your update
                 onSave={(updated) => handleSaveItem(id, item, updated)}
               />
             );
           })}
         </View>
-
       </ScrollView>
     </View>
   );
