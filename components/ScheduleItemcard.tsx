@@ -9,7 +9,7 @@ import {
   Platform
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { canDispenseFood } from "../services/FeedGuardService";
 import { useTheme } from "../theme/useTheme";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,7 +19,7 @@ type Props = {
   time: string;
   angle: number;
   active: boolean;
-  grams: number; // Re-added grams
+  grams: number;
   onSave: (data: {
     time: string;
     angle: number;
@@ -30,10 +30,12 @@ type Props = {
 
 export default function ScheduleItemCard({ id, time, angle, active, grams, onSave }: Props) {
   const theme = useTheme();
+  
+  // Local states
   const [enabled, setEnabled] = useState(active);
   const [currentTime, setCurrentTime] = useState(time || "00:00");
   const [currentAngle, setCurrentAngle] = useState(angle || 90);
-  const [currentGrams, setCurrentGrams] = useState(grams ?? 0); // Defensive init
+  const [currentGrams, setCurrentGrams] = useState(grams ?? 0);
   const [pickerOpen, setPickerOpen] = useState(false);
 
   useEffect(() => {
@@ -43,45 +45,55 @@ export default function ScheduleItemCard({ id, time, angle, active, grams, onSav
     setCurrentGrams(grams ?? 0);
   }, [active, time, angle, grams]);
 
-  const save = (next: { time?: string; angle?: number; active?: boolean; grams?: number }) => {
-    onSave({
-      time: next.time ?? currentTime,
-      angle: next.angle ?? currentAngle,
-      active: next.active ?? enabled,
-      grams: next.grams ?? currentGrams
-    });
+  const handleUpdate = (updates: Partial<{ time: string; angle: number; active: boolean; grams: number }>) => {
+    const finalData = {
+      time: updates.time ?? currentTime,
+      angle: updates.angle ?? currentAngle,
+      active: updates.active ?? enabled,
+      grams: updates.grams ?? currentGrams
+    };
+
+    
+    if (finalData.grams > 500) {
+      Alert.alert("Safety Limit", "Maximum portion per feed is 500g.");
+      return;
+    }
+
+    onSave(finalData);
   };
 
   const handleToggle = async (value: boolean) => {
     if (value) {
       const allowed = await canDispenseFood();
       if (!allowed) {
-        Alert.alert("Feeding Blocked", "Cannot activate this schedule while food is still in the bowl.");
+        Alert.alert("Feeding Blocked", "Infrared sensor detects food already in bowl.");
         return;
       }
     }
     setEnabled(value);
-    save({ active: value });
+    handleUpdate({ active: value });
   };
 
   const handleTimeChange = (_: any, date?: Date) => {
     setPickerOpen(false);
     if (!date) return;
     
-    // Manual 24h extraction
     const hh = date.getHours().toString().padStart(2, "0");
     const mm = date.getMinutes().toString().padStart(2, "0");
     const formatted = `${hh}:${mm}`;
     
     setCurrentTime(formatted);
-    save({ time: formatted });
+    handleUpdate({ time: formatted });
   };
 
   const handleCustomGrams = (text: string) => {
     const numericValue = text.replace(/[^0-9]/g, "");
-    const val = numericValue === "" ? 0 : parseInt(numericValue, 10);
+    const val = numericValue === "" ? 0 : Math.min(parseInt(numericValue, 10), 500);
     setCurrentGrams(val);
-    save({ grams: val });
+  };
+
+  const submitGrams = () => {
+    handleUpdate({ grams: currentGrams });
   };
 
   const getPickerDate = () => {
@@ -93,13 +105,13 @@ export default function ScheduleItemCard({ id, time, angle, active, grams, onSav
 
   return (
     <View style={[styles.card, { backgroundColor: theme.background }]}>
-      {/* HEADER */}
+      {/* HEADER SECTION */}
       <View style={styles.cardRow}>
         <View>
-          <Text style={[styles.label, { color: theme.muted }]}>{id ? id.toUpperCase() : "SCHEDULE"}</Text>
+          <Text style={[styles.label, { color: theme.muted }]}>{id ? id.toUpperCase() : "FEEDING PLAN"}</Text>
           <Pressable onPress={() => setPickerOpen(true)} style={styles.timePressable}>
             <Text style={[styles.timeValue, { color: theme.text }]}>{currentTime}</Text>
-            <Ionicons name="pencil-sharp" size={14} color={theme.primary} style={{ marginLeft: 6 }} />
+            <Ionicons name="time-outline" size={18} color={theme.primary} style={{ marginLeft: 8 }} />
           </Pressable>
         </View>
 
@@ -113,43 +125,45 @@ export default function ScheduleItemCard({ id, time, angle, active, grams, onSav
 
       <View style={[styles.divider, { backgroundColor: theme.muted + '15' }]} />
 
-      {/* GRAMS INPUT */}
+      {/* GRAMS CONFIGURATION */}
       <View style={{ marginBottom: 20 }}>
-        <Text style={[styles.label, { color: theme.muted, marginBottom: 8 }]}>WEIGHT (GRAMS)</Text>
+        <Text style={[styles.label, { color: theme.muted, marginBottom: 8 }]}>TARGET WEIGHT (0-500g)</Text>
         <TextInput
           style={[styles.gramsInput, { color: theme.text, backgroundColor: theme.surface }]}
           keyboardType="numeric"
-          value={currentGrams ? String(currentGrams) : ""}
+          value={String(currentGrams)}
           onChangeText={handleCustomGrams}
+          onBlur={submitGrams}
           placeholder="0"
           placeholderTextColor={theme.muted}
         />
       </View>
 
-      {/* PORTION / ANGLE SELECTOR */}
+      {/* HARDWARE FLOW RATE (ANGLE) */}
       <View>
-        <Text style={[styles.label, { color: theme.muted, marginBottom: 12 }]}>FLOW RATE (ANGLE)</Text>
+        <Text style={[styles.label, { color: theme.muted, marginBottom: 12 }]}>DISPENSER OPENING (FLOW RATE)</Text>
         <View style={styles.portionRow}>
           {[
             { label: "Slow", val: 45 },
             { label: "Fast", val: 90 },
             { label: "Full", val: 180 }
-          ].map((portion) => (
+          ].map((item) => (
             <Pressable
-              key={portion.label}
+              key={item.label}
               onPress={() => {
-                setCurrentAngle(portion.val);
-                save({ angle: portion.val });
+                setCurrentAngle(item.val);
+                handleUpdate({ angle: item.val });
               }}
               style={[
                 styles.portionBtn,
                 { backgroundColor: theme.surface },
-                currentAngle === portion.val && { borderColor: theme.primary, borderWidth: 1.5 }
+                currentAngle === item.val && { borderColor: theme.primary, borderWidth: 2 }
               ]}
             >
-              <Text style={[styles.portionBtnText, { color: currentAngle === portion.val ? theme.primary : theme.muted }]}>
-                {portion.label}
+              <Text style={[styles.portionBtnText, { color: currentAngle === item.val ? theme.primary : theme.muted }]}>
+                {item.label}
               </Text>
+              <Text style={{ fontSize: 9, color: theme.muted }}>{item.val}°</Text>
             </Pressable>
           ))}
         </View>
@@ -160,8 +174,7 @@ export default function ScheduleItemCard({ id, time, angle, active, grams, onSav
           mode="time" 
           value={getPickerDate()} 
           is24Hour={true} 
-          locale="en-GB" // Forces the 24h UI logic
-          display={Platform.OS === 'android' ? 'clock' : 'inline'} // 'clock' is the Round Version for Android
+          display={Platform.OS === 'android' ? 'clock' : 'inline'} 
           onChange={handleTimeChange} 
         />
       )}
@@ -170,14 +183,14 @@ export default function ScheduleItemCard({ id, time, angle, active, grams, onSav
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 24, padding: 24, borderWidth: 1, borderColor: 'rgba(0,0,0,0.05)', elevation: 3 },
+  card: { borderRadius: 28, padding: 24, marginBottom: 16, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 8 },
   cardRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  label: { fontSize: 11, fontWeight: "700", letterSpacing: 0.5, marginBottom: 4 },
-  timePressable: { flexDirection: 'row', alignItems: 'center' },
-  timeValue: { fontSize: 24, fontWeight: "900" },
+  label: { fontSize: 10, fontWeight: "800", letterSpacing: 1, marginBottom: 4 },
+  timePressable: { flexDirection: 'row', alignItems: 'center', marginTop: 4 },
+  timeValue: { fontSize: 28, fontWeight: "900" },
   divider: { height: 1, marginVertical: 20 },
-  gramsInput: { padding: 12, borderRadius: 14, fontSize: 16, fontWeight: "700" },
-  portionRow: { flexDirection: "row", gap: 12 },
-  portionBtn: { flex: 1, paddingVertical: 12, borderRadius: 14, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: 'rgba(0,0,0,0.05)' },
-  portionBtnText: { fontSize: 14, fontWeight: "700" },
+  gramsInput: { padding: 14, borderRadius: 16, fontSize: 18, fontWeight: "700", textAlign: 'center' },
+  portionRow: { flexDirection: "row", gap: 10 },
+  portionBtn: { flex: 1, paddingVertical: 14, borderRadius: 16, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: 'transparent' },
+  portionBtnText: { fontSize: 14, fontWeight: "800" },
 });

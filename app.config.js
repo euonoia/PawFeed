@@ -1,41 +1,3 @@
-import fs from 'fs';
-import path from 'path';
-import 'dotenv/config';
-
-// Determine environment
-const ENV = process.env.APP_ENV || 'development';
-
-// Load the corresponding .env file
-const envFilePath = path.resolve(process.cwd(), `.env.${ENV}`);
-if (fs.existsSync(envFilePath)) {
-  require('dotenv').config({ path: envFilePath });
-  console.log(`Loaded environment variables from ${envFilePath}`);
-} else {
-  console.warn(`No .env file found for environment: ${ENV}, using defaults`);
-}
-
-// Define Firebase and other environment variables
-const env = {
-  development: {
-    EXPO_PUBLIC_FIREBASE_API_KEY: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-    EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    EXPO_PUBLIC_FIREBASE_DATABASE_URL: process.env.EXPO_PUBLIC_FIREBASE_DATABASE_URL,
-    EXPO_PUBLIC_FIREBASE_PROJECT_ID: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-    EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    EXPO_PUBLIC_FIREBASE_APP_ID: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
-  },
-  production: {
-    EXPO_PUBLIC_FIREBASE_API_KEY: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-    EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-    EXPO_PUBLIC_FIREBASE_DATABASE_URL: process.env.EXPO_PUBLIC_FIREBASE_DATABASE_URL,
-    EXPO_PUBLIC_FIREBASE_PROJECT_ID: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-    EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-    EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-    EXPO_PUBLIC_FIREBASE_APP_ID: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
-  },
-};
-
 export default ({ config }) => ({
   ...config,
   name: 'PawFeed',
@@ -46,35 +8,28 @@ export default ({ config }) => ({
   scheme: 'pawfeed',
   userInterfaceStyle: 'automatic',
   newArchEnabled: true,
-  splash: {
-    image: './assets/images/splash-icon.png',
-    resizeMode: 'contain',
-    backgroundColor: '#ffffff',
-  },
   ios: {
     supportsTablet: true,
     bundleIdentifier: 'com.kennysport.PawFeed',
   },
   android: {
+    package: 'com.kennysport.PawFeed',
     adaptiveIcon: {
-      foregroundImage: './assets/images/adaptive-icon.png',
+      foregroundImage: './assets/pawfeed.png',
       backgroundColor: '#ffffff',
     },
-    edgeToEdgeEnabled: true,
-    predictiveBackGestureEnabled: false,
-    package: 'com.kennysport.PawFeed',
+   
+    usesCleartextTraffic: true, 
   },
-  web: {
-    bundler: 'metro',
-    output: 'static',
-    favicon: './assets/images/favicon.png',
-  },
-  plugins: ['expo-router'],
-  experiments: { typedRoutes: true },
   extra: {
-    router: {},
     eas: { projectId: '0919ecd1-0a5f-49df-80e1-58fe47392482' },
-    ...env[ENV], 
+    EXPO_PUBLIC_FIREBASE_API_KEY: "AIzaSyCgaWtvBXBvZa_-Jtg6CAVaQClPWiCRGng",
+    EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN: "iotfoodfeeder.firebaseapp.com",
+    EXPO_PUBLIC_FIREBASE_DATABASE_URL: "https://iotfoodfeeder-default-rtdb.firebaseio.com",
+    EXPO_PUBLIC_FIREBASE_PROJECT_ID: "iotfoodfeeder",
+    EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET: "iotfoodfeeder.firebasestorage.app",
+    EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "154077067174",
+    EXPO_PUBLIC_FIREBASE_APP_ID: "1:154077067174:web:bd91970270e358c3fc4167",
   },
   owner: 'kennysport',
 });
