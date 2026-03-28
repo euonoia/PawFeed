@@ -1,6 +1,6 @@
 #  PawFeed – MICROCONTROLLER-CONTROLLED AUTOMATED PET FOOD DESPENSER
 
-PawFeed is a **full-stack IoT project** designed to automate and monitor pet nutrition with high precision. It integrates:
+PawFeed is a **full-stack IoT project** for our Technopreneurship course in college designed to automate and monitor pet food dispenser with high precision. It integrates:
 
 - **ESP32-based hardware controller**  
 - **React Native (Expo) mobile application**  
@@ -44,7 +44,7 @@ PawFeed prioritizes pet safety through a multi-layer protocol:
 * **Cloud:** Firebase Realtime Database, Firebase Authentication  
 * **Hardware:** HX711 Load Cell, MG996R Servo Motor  
 
-> Demonstrates your ability to integrate **hardware, firmware, mobile apps, and cloud services** in a production-ready system.
+> Demonstrates my ability to integrate **hardware, firmware, mobile apps, and cloud services** in a production-ready system.
 
 ---
 
