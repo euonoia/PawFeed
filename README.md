@@ -1,4 +1,4 @@
-#  PawFeed – High-Precision IoT Pet Nutrition Ecosystem
+#  PawFeed – MICROCONTROLLER-CONTROLLED AUTOMATED PET FOOD DESPENSER
 
 PawFeed is a **full-stack IoT project** designed to automate and monitor pet nutrition with high precision. It integrates:
 
